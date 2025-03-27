@@ -1,0 +1,27 @@
+schema {
+//    table "bigdata" {
+//        file "bigdata.csv"
+//    }
+
+    table "todo" label="Todos" {
+        // Ingest multiple files to populate this table
+        file "todo.csv"
+        //file "another-file.csv"
+
+        field "status" type="select" label="Status" {
+            option "todo" label="Todo"
+            option "doing" label="Doing"
+            option "done" label="Done"
+        }
+        field "milestone_id" label="Milestone" type="belongs_to" related_entity="milestone" related_key="id"
+        field "title" type="title"
+    }
+
+    table "milestone" label="Milestones" {
+        file "milestone.csv"
+    }
+
+    table "time_entries" label="Time Entries" {
+        file "time_entries.csv"
+    }
+}

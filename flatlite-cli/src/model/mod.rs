@@ -9,6 +9,7 @@ use rusqlite::types::{FromSql, ValueRef};
 use eyre::{Context, Result};
 use rusqlite::ffi::sqlite3_temp_directory;
 use crate::color_scheme::ColorScheme;
+use crate::dbconfig::DbConfig;
 use crate::model::text::TextInput;
 use crate::util::Vector2i;
 
@@ -55,9 +56,10 @@ pub enum Mode {
 
 pub enum Action {
     NavigateBy(Vector2i),
+    AddRow,
     NextCell,
     CancelEdit,
-    EditCell,
+    EditCell { clear: bool },
     SaveCell,
 }
 
@@ -80,6 +82,7 @@ impl Mode {
 pub struct App {
     pub conn: Connection,
     pub schema: Schema,
+    pub config: DbConfig,
     pub color_scheme: ColorScheme,
     pub current_sheet: usize,
     pub show_debug: bool,
@@ -90,13 +93,14 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(conn: Connection, schema: Schema) -> Self {
+    pub fn new(conn: Connection, schema: Schema, config: DbConfig) -> Self {
         // Fill the sheets cache with blanks
         let sheets_cache: Vec<Option<SheetCache>> = schema.entities.iter().map(|_| None).collect();
 
         let mut app = App {
             conn,
             schema,
+            config,
             color_scheme: ColorScheme::default(),
             current_sheet: 0,
             show_debug: false,
@@ -117,7 +121,7 @@ impl App {
 
     pub fn populate_sheet(&mut self, index: usize) {
         let entity = &self.schema.entities[index];
-        let limit = 10;
+        let limit = 20;
 
         let existing_cache = self.sheets_cache.get(index).unwrap();
         let selected_cell = match existing_cache {
@@ -125,7 +129,7 @@ impl App {
             None => Vector2i::new(0, 0),
         };
 
-        let mut stmt = self.conn.prepare(&format!("SELECT * from {} LIMIT {}", entity.table, limit)).unwrap();
+        let mut stmt = self.conn.prepare(&format!("SELECT * from {} ORDER BY __row LIMIT {}", entity.table, limit)).unwrap();
         let mut rows = stmt.query([]).unwrap();
 
         let mut cache = SheetCache {
@@ -229,10 +233,24 @@ impl App {
                 }
                 sheet.selected_cell = new_cell;
             }
-            Action::EditCell => {
+            Action::EditCell {clear} => {
                 let sheet = self.active_sheet().unwrap();
                 let cell = &sheet.rows[sheet.selected_cell.row()].cells[sheet.selected_cell.col()];
-                self.mode = Mode::EditingCell(TextInput::new(cell.display.as_str()))
+                self.mode = Mode::EditingCell(TextInput::new(if clear { "" } else { cell.display.as_str() }))
+            }
+            Action::AddRow => {
+                {
+                    let sheet = self.active_sheet().unwrap();
+                    let row = &sheet.rows[sheet.selected_cell.row()];
+                    let new_row_id = row.rowid + 1;
+
+                    self.conn.execute(&format!("UPDATE {} SET __row = __row + 1 WHERE __row >= ?", sheet.table_name), [new_row_id]).unwrap();
+                    self.conn.execute(&format!("INSERT INTO {} (__row) VALUES (?)", sheet.table_name), [new_row_id]).unwrap();
+                }
+
+                let sheet = self.active_sheet_mut().unwrap();
+                sheet.selected_cell = sheet.selected_cell + Vector2i::new(0, 1);
+                self.populate_sheet(self.current_sheet);
             }
             Action::SaveCell => {
                 let sheet = self.active_sheet().unwrap();
@@ -274,10 +292,14 @@ impl App {
                     return;
                 };
 
-                self.debug_text = format!("{:#?} \n\n {:#?}", self.mode, k);
+                self.debug_text = format!("{:#?} \n\n {:#?}", self.mode, self.config);
 
                 match (&mut self.mode, k.code) {
                     (Mode::EditingCell(_), KeyCode::Esc) => self.process_action(Action::CancelEdit),
+                    (Mode::EditingCell(_), KeyCode::Tab) => {
+                        self.process_action(Action::SaveCell);
+                        self.process_action(Action::NextCell);
+                    },
                     (Mode::EditingCell(_), KeyCode::Enter) => self.process_action(Action::SaveCell),
                     (Mode::EditingCell(ref mut input), KeyCode::Char(c)) => input.insert_char_at_cursor(c),
                     (Mode::EditingCell(ref mut input), KeyCode::Backspace) => input.delete_char(),
@@ -303,12 +325,14 @@ impl App {
                             KeyCode::Up => self.process_action(Action::NavigateBy(Vector2i::new(0, -1))),
                             KeyCode::Down => self.process_action(Action::NavigateBy(Vector2i::new(0, 1))),
                             KeyCode::Tab => self.process_action(Action::NextCell),
+                            KeyCode::Char('a') => self.process_action(Action::AddRow),
                             KeyCode::Char('h') => self.process_action(Action::NavigateBy(Vector2i::new(-1, 0))),
                             KeyCode::Char('j') => self.process_action(Action::NavigateBy(Vector2i::new(0, 1))),
                             KeyCode::Char('k') => self.process_action(Action::NavigateBy(Vector2i::new(0, -1))),
                             KeyCode::Char('l') => self.process_action(Action::NavigateBy(Vector2i::new(1, 0))),
-                            KeyCode::Char('a') => self.process_action(Action::EditCell),
-                            KeyCode::Enter => self.process_action(Action::EditCell),
+                            KeyCode::Char('e') => self.process_action(Action::EditCell { clear: false }),
+                            KeyCode::Char('E') => self.process_action(Action::EditCell { clear: true }),
+                            KeyCode::Enter => self.process_action(Action::EditCell { clear: false }),
                             KeyCode::Char('q') => self.should_quit = true,
                             _ => (),
                         }
