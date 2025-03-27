@@ -9,6 +9,7 @@ doing,proto,"Simple multichoice fields (eg todo, doing, done)"
 todo,idea,Board view (kanban style)
 todo,idea,Group by in sheet view
 todo,idea,Optimise ingestion by batching inserts
+todo,proto,Scrolling sheets
 todo,proto,null should show as grayed out and not actually save
 todo,proto,allow rows to be deleted
 todo,proto,allow cursor movement in text editing
