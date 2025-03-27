@@ -1,0 +1,10 @@
++recipe Chicken Spaghetti
+
+++ingredient |food: ^food.chicken_mince| |amount: 500g|
+++ingredient |food: ^food.onion| |amount: 2|
+++ingredient |food: ^food.garlic| |amount: 2|
+++ingredient |food: ^food.zucchini| |amount: 1|
+
+---
+Some body text
+---
