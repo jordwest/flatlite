@@ -12,6 +12,8 @@ pub struct ColorScheme {
     pub cell: Style,
     pub cell_aligned: Style,
     pub cell_selected: Style,
+    pub cell_editing: Style,
+    pub cell_editing_cursor: Style,
 }
 
 impl Default for ColorScheme {
@@ -26,6 +28,8 @@ impl Default for ColorScheme {
             cell: Style::from((Reset, Rgb(0, 0, 10))),
             cell_aligned: Style::from((Reset, Rgb(0, 0, 40))),
             cell_selected: Style::from((White, Rgb(100, 100, 200))),
+            cell_editing: Style::from((Black, White)),
+            cell_editing_cursor: Style::from((Black, Rgb(180, 180, 240))),
         }
     }
 }
