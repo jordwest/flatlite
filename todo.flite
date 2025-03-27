@@ -1,9 +1,0 @@
-.status.doing In progress
-..task ^project.flatlite Experiment with task setup
-
-.status.todo Todo
-..task ^project.flatlite Parse the files with rust
-..task ^project.moving Get quotes for removalist
-
-.status.done Done
-
