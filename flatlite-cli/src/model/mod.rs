@@ -1,9 +1,13 @@
 mod text;
 
+use std::fs;
+use std::fs::File;
 use std::ops::{Add, Sub};
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use rusqlite::Connection;
 use rusqlite::types::{FromSql, ValueRef};
+use eyre::{Context, Result};
+use rusqlite::ffi::sqlite3_temp_directory;
 use crate::color_scheme::ColorScheme;
 use crate::model::text::TextInput;
 use crate::util::Vector2i;
@@ -12,6 +16,13 @@ use crate::util::Vector2i;
 pub struct Entity {
     pub table: String,
     pub columns: Vec<String>,
+    pub source_file: String,
+}
+
+impl Entity {
+    pub fn query_columns(&self) -> String {
+        self.columns.join(",")
+    }
 }
 
 #[derive(Default)]
@@ -161,6 +172,45 @@ impl App {
         self.sheets_cache.get_mut(self.current_sheet).unwrap().into()
     }
 
+    pub fn save_entity(&self, entity_index: usize) -> Result<()> {
+        let entity = self.schema.entities.get(entity_index).unwrap();
+
+        let mut stmt = self.conn.prepare(
+            &format!("SELECT {} FROM {} ORDER BY __row ASC", entity.query_columns(), entity.table)
+        ).wrap_err("Statement prepare failed")?;
+
+
+        let mut rows = stmt.query([])?;
+
+        let temp_filename = format!("{}.new", &entity.source_file);
+        {
+            let file = File::create(&temp_filename).wrap_err_with(|| temp_filename.clone())?;
+            let mut writer = csv::Writer::from_writer(file);
+
+            // Write header
+            writer.write_record(&entity.columns)?;
+
+            let mut cells: Vec<String> = Vec::new();
+
+            while let Some(row) = rows.next()? {
+                cells.clear();
+
+                for (i, _column_name) in entity.columns.iter().enumerate() {
+                    let cell_data: CellData = row.get(i)?;
+                    cells.push(cell_data.display);
+                }
+                writer.write_record(&cells)?;
+            }
+            writer.flush()?;
+        }
+
+        // Since everything went ok, delete the original file and rename the new one to the original
+        fs::remove_file(&entity.source_file)?;
+        fs::rename(&temp_filename, &entity.source_file)?;
+
+        Ok(())
+    }
+
     pub fn process_action(&mut self, action: Action) {
         match action {
             Action::NavigateBy(rel) => {
@@ -207,6 +257,7 @@ impl App {
 
                 self.populate_sheet(self.current_sheet);
                 self.mode = Mode::Normal;
+                self.save_entity(self.current_sheet).unwrap();
             },
             Action::CancelEdit => {
                 self.mode = Mode::Normal;

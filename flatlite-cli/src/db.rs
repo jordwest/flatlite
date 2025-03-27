@@ -3,8 +3,8 @@ use eyre::Context;
 use rusqlite::{params_from_iter, Connection};
 use crate::model::{Entity, Schema};
 
-pub fn ingest_csv_table(conn: &Connection, schema: &mut Schema, table_name: &str, file: &str) -> eyre::Result<()> {
-    let file = File::open(file).wrap_err("Failed to open file")?;
+pub fn ingest_csv_table(conn: &Connection, schema: &mut Schema, table_name: &str, source_file: &str) -> eyre::Result<()> {
+    let file = File::open(source_file).wrap_err("Failed to open file")?;
     let mut rdr = csv::Reader::from_reader(file);
 
     let headers = rdr.headers().wrap_err("Failed to read headers")?.iter().collect::<Vec<_>>();
@@ -18,6 +18,7 @@ pub fn ingest_csv_table(conn: &Connection, schema: &mut Schema, table_name: &str
     let mut e = Entity::default();
     e.table = table_name.to_string();
     e.columns = headers.iter().map(|s| s.to_string()).collect();
+    e.source_file = source_file.to_string();
     schema.entities.push(e);
 
     for row_result in rdr.records() {

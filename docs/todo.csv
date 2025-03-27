@@ -1,9 +1,8 @@
 status,milestone,title
 done,proto,Parse csv to sqlite
 done,proto,Refactor everything out of main
-done,proto,Allow editing string fields
-doing,proto,Write sqlite back to csv
+done,proto,Allow editing string fields test oooooh it works
+done,proto,Write sqlite back to csv
 todo,proto,KDL configuration format for schema validation
 todo,proto,"Simple multichoice fields (eg todo, doing, done)"
-
 todo,idea,Board view (kanban style)
