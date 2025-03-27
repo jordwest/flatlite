@@ -117,7 +117,7 @@ impl App {
 
     pub fn populate_sheet(&mut self, index: usize) {
         let entity = &self.schema.entities[index];
-        let limit = 5;
+        let limit = 10;
 
         let existing_cache = self.sheets_cache.get(index).unwrap();
         let selected_cell = match existing_cache {
