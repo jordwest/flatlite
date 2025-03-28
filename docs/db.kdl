@@ -34,9 +34,17 @@ schema {
 
     table "milestone" label="Milestones" {
         file "milestone.csv"
+
+        field "id"
+        field "title"
+        field "time_budget"
     }
 
     table "time_entries" label="Time Entries" {
         file "time_entries.csv"
+
+        field "milestone"
+        field "datetime"
+        field "duration"
     }
 }
