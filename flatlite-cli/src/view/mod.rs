@@ -28,6 +28,11 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
 
     for row in &sheet.rows {
         for (i, col_area) in column_layout.iter().enumerate() {
+            
+            if y > area.height {
+                return;
+            }
+            
             let is_selected_col = i == sheet.selected_cell.col();
             let is_selected_row = row_idx == sheet.selected_cell.row();
             let is_selected_cell = is_selected_col && is_selected_row;
