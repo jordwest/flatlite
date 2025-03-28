@@ -4,7 +4,11 @@ schema {
 
         field "id"
         field "title"
-        field "extra"
+        field "extra" type="select" {
+            option "one" label="Option one"
+            option "two" label="Option two"
+            option "shoe" label="Option shoe"
+        }
     }
 
     table "todo" label="Todos" {

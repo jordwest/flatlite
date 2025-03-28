@@ -20,7 +20,7 @@ impl Default for ColorScheme {
     fn default() -> Self {
         ColorScheme {
             active_tab: Style::from((Black, White)).add_modifier(Modifier::BOLD),
-            inactive_tab: Style::from((White, Black)),
+            inactive_tab: Style::from((Black, Rgb(150, 150, 150))),
             status_bar: Style::from((Black, White)),
             debug_panel: Style::from((Reset, Rgb(4, 22, 51))),
             sheet_heading_active: Style::from((Black, Rgb(200, 200, 235))).add_modifier(Modifier::BOLD),
