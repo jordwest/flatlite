@@ -1,0 +1,12 @@
+procs:
+  terminal:
+    shell: "fish"
+  git:
+    shell: "gitui"
+  flatlite-cli:
+    cwd: "flatlite-cli"
+    shell: "RUST_BACKTRACE=1 cargo run --bin flatlite-cli"
+  generate-bigdata:
+    autostart: false
+    cwd: "flatlite-cli"
+    shell: "RUST_BACKTRACE=1 cargo run --bin gen"
