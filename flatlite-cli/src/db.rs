@@ -12,10 +12,10 @@ pub fn ingest_csv_table(conn: &mut Connection, schema: &mut Schema, table_name: 
     let columns = headers.iter().map(|s| s.to_string()).collect::<Vec<_>>().join(", ");
     let column_definitions = headers.iter().map(|h| format!("{} TEXT", h)).collect::<Vec<String>>().join(", ");
 
-    let sql = format!("CREATE TABLE {} (__row INTEGER, {})", table_name, column_definitions);
+    let sql = format!("CREATE TABLE {} (__order INTEGER, {})", table_name, column_definitions);
     conn.execute(&sql, [])?;
-    
-    conn.execute(&format!("CREATE INDEX {}_row_idx ON {} (__row)", table_name, table_name), [])?;
+
+    conn.execute(&format!("CREATE INDEX {}_order_idx ON {} (__order)", table_name, table_name), [])?;
 
     let mut e = Entity::default();
     e.table = table_name.to_string();
@@ -24,17 +24,17 @@ pub fn ingest_csv_table(conn: &mut Connection, schema: &mut Schema, table_name: 
     schema.entities.push(e);
 
     let mut rowid = 0;
-    
+
     for row_result in rdr.records() {
         let row = row_result.wrap_err("Failed to read row")?;
 
         let placeholders = row.iter().map(|_| "?").collect::<Vec<_>>().join(",");
 
-        let sql = format!("INSERT INTO {} (__row, {}) VALUES ({}, {})", table_name, columns, rowid, placeholders);
+        let sql = format!("INSERT INTO {} (__order, {}) VALUES ({}, {})", table_name, columns, rowid, placeholders);
 
         conn.execute(&sql, params_from_iter(row.iter())).wrap_err("Failed to INSERT row")?;
         rowid += 1;
     }
-    
+
     Ok(())
 }

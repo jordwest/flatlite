@@ -1,16 +1,17 @@
-status,milestone_id,title
-done,proto,Parse csv to sqlite
-done,proto,Refactor everything out of main
-done,proto,Allow editing string fields test
-done,proto,Write sqlite back to csv
-done,proto,Test OFFSET performance (plenty fast enough for 500k rows)
-doing,proto,KDL configuration format for schema validation
-doing,proto,"Simple multichoice fields (eg todo, doing, done)"
-todo,idea,Board view (kanban style)
-todo,idea,Group by in sheet view
-todo,idea,Optimise ingestion by batching inserts
-todo,proto,Scrolling sheets
-todo,proto,null should show as grayed out and not actually save
-todo,proto,allow rows to be deleted
-todo,proto,allow cursor movement in text editing
-todo,idea,"Selecting, cutting, pasting rows"
+status,type,milestone_id,title
+done,feat,proto,Parse csv to sqlite
+done,refactor,proto,Refactor everything out of main
+done,feat,proto,Allow editing string fields
+done,feat,proto,Write sqlite back to csv
+done,perf,proto,Test OFFSET performance (plenty fast enough for 500k rows)
+doing,feat,proto,KDL configuration format for schema validation
+doing,feat,proto,"Simple multichoice fields (eg todo, doing, done)"
+todo,feat,idea,Board view (kanban style)
+todo,feat,idea,Group by in sheet view
+todo,perf,idea,Optimise ingestion by batching inserts
+todo,imp,proto,Scrolling sheets
+todo,imp,proto,null should show as grayed out and not actually save
+todo,feat,proto,allow rows to be deleted
+todo,imp,proto,allow cursor movement in text editing
+todo,refactor,proto,refactor all SQL queries to db module
+todo,feat,idea,"Selecting, cutting, pasting rows"

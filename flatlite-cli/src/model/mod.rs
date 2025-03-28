@@ -7,7 +7,6 @@ use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use rusqlite::Connection;
 use rusqlite::types::{FromSql, ValueRef};
 use eyre::{Context, Result};
-use rusqlite::ffi::sqlite3_temp_directory;
 use crate::color_scheme::ColorScheme;
 use crate::dbconfig::DbConfig;
 use crate::model::text::TextInput;
@@ -129,7 +128,7 @@ impl App {
             None => Vector2i::new(0, 0),
         };
 
-        let mut stmt = self.conn.prepare(&format!("SELECT * from {} ORDER BY __row LIMIT {}", entity.table, limit)).unwrap();
+        let mut stmt = self.conn.prepare(&format!("SELECT * from {} ORDER BY __order LIMIT {}", entity.table, limit)).unwrap();
         let mut rows = stmt.query([]).unwrap();
 
         let mut cache = SheetCache {
@@ -180,7 +179,7 @@ impl App {
         let entity = self.schema.entities.get(entity_index).unwrap();
 
         let mut stmt = self.conn.prepare(
-            &format!("SELECT {} FROM {} ORDER BY __row ASC", entity.query_columns(), entity.table)
+            &format!("SELECT {} FROM {} ORDER BY __order ASC", entity.query_columns(), entity.table)
         ).wrap_err("Statement prepare failed")?;
 
 
@@ -244,8 +243,8 @@ impl App {
                     let row = &sheet.rows[sheet.selected_cell.row()];
                     let new_row_id = row.rowid + 1;
 
-                    self.conn.execute(&format!("UPDATE {} SET __row = __row + 1 WHERE __row >= ?", sheet.table_name), [new_row_id]).unwrap();
-                    self.conn.execute(&format!("INSERT INTO {} (__row) VALUES (?)", sheet.table_name), [new_row_id]).unwrap();
+                    self.conn.execute(&format!("UPDATE {} SET __order = __order + 1 WHERE __order >= ?", sheet.table_name), [new_row_id]).unwrap();
+                    self.conn.execute(&format!("INSERT INTO {} (__order) VALUES (?)", sheet.table_name), [new_row_id]).unwrap();
                 }
 
                 let sheet = self.active_sheet_mut().unwrap();
@@ -265,7 +264,7 @@ impl App {
 
                     let mut stmt = self.conn.prepare(
                         &format!(
-                            "UPDATE {} SET {} = ? WHERE __row = ?",
+                            "UPDATE {} SET {} = ? WHERE __order = ?",
                             sheet.table_name,
                             sheet.columns[sheet.selected_cell.col()].table_column,
                         )).unwrap();
