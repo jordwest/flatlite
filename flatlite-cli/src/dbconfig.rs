@@ -25,7 +25,6 @@ impl DbConfig {
 
 #[derive(Debug, Default)]
 pub struct DbSchema {
-    pub test: String,
     pub tables: Vec<DbTable>,
 }
 
@@ -41,7 +40,7 @@ impl DbSchema {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct DbTable {
     pub name: String,
     pub label: Option<String>,
@@ -79,7 +78,7 @@ impl DbTable {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DbField {
     pub name: String,
     pub label: Option<String>,
@@ -110,7 +109,7 @@ impl DbField {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FieldType {
     StringType,
     SelectType(Vec<SelectOption>),
@@ -137,10 +136,10 @@ impl FieldType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SelectOption {
-    key: String,
-    label: Option<String>,
+    pub key: String,
+    pub label: Option<String>,
 }
 
 impl SelectOption {

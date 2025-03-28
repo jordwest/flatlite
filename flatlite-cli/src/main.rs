@@ -8,7 +8,6 @@ mod dbconfig;
 use std::fs::{read_to_string};
 use rusqlite::{Connection};
 use eyre::{Context, Result};
-use kdl::KdlDocument;
 use ratatui::{DefaultTerminal};
 use ratatui::crossterm::event;
 use ratatui::prelude::*;

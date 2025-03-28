@@ -1,14 +1,14 @@
 mod text;
 
+use std::collections::VecDeque;
 use std::fs;
 use std::fs::File;
-use std::ops::{Add, Sub};
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use rusqlite::Connection;
 use rusqlite::types::{FromSql, ValueRef};
 use eyre::{Context, Result};
 use crate::color_scheme::ColorScheme;
-use crate::dbconfig::DbConfig;
+use crate::dbconfig::{DbConfig, DbTable, FieldType};
 use crate::model::text::TextInput;
 use crate::util::Vector2i;
 
@@ -42,6 +42,7 @@ pub struct SheetColumn {
 
 pub struct SheetCache {
     pub selected_cell: Vector2i,
+    pub table_config: DbTable,
     pub table_name: String,
     pub columns: Vec<SheetColumn>,
     pub rows: Vec<SheetRow>,
@@ -57,9 +58,11 @@ pub enum Action {
     NavigateBy(Vector2i),
     AddRow,
     NextCell,
+    FinishEdit,
     CancelEdit,
+    SetMode(Mode),
     EditCell { clear: bool },
-    SaveCell,
+    SaveCell { value: String },
 }
 
 impl Mode {
@@ -79,16 +82,17 @@ impl Mode {
 }
 
 pub struct App {
+    pub command_buffer: VecDeque<Action>,
     pub conn: Connection,
     pub schema: Schema,
     pub config: DbConfig,
     pub color_scheme: ColorScheme,
+    pub sheets_cache: Vec<Option<SheetCache>>,
     pub current_sheet: usize,
     pub show_debug: bool,
     pub should_quit: bool,
     pub debug_text: String,
     pub mode: Mode,
-    pub sheets_cache: Vec<Option<SheetCache>>,
 }
 
 impl App {
@@ -97,16 +101,17 @@ impl App {
         let sheets_cache: Vec<Option<SheetCache>> = schema.entities.iter().map(|_| None).collect();
 
         let mut app = App {
-            conn,
-            schema,
-            config,
-            color_scheme: ColorScheme::default(),
+            command_buffer: VecDeque::new(),
             current_sheet: 0,
             show_debug: false,
             debug_text: "".to_string(),
             should_quit: false,
             sheets_cache,
             mode: Mode::Normal,
+            conn,
+            schema,
+            config,
+            color_scheme: ColorScheme::default(),
         };
 
         app.populate_sheet(0);
@@ -131,9 +136,12 @@ impl App {
         let mut stmt = self.conn.prepare(&format!("SELECT * from {} ORDER BY __order LIMIT {}", entity.table, limit)).unwrap();
         let mut rows = stmt.query([]).unwrap();
 
+        let table_config = self.config.schema.tables.iter().find(|t| t.name == entity.table).unwrap().clone();
+
         let mut cache = SheetCache {
             selected_cell,
             rows: Vec::new(),
+            table_config,
             columns: entity.columns.iter().map(|s| SheetColumn { table_column: s.clone(), width: (s.len() + 2) as u16 }).collect(),
             table_name: entity.table.clone(),
         };
@@ -214,6 +222,17 @@ impl App {
         Ok(())
     }
 
+    pub fn push_action(&mut self, action: Action) {
+        self.command_buffer.push_back(action);
+    }
+
+    pub fn process_actions(&mut self) {
+        while self.command_buffer.len() > 0 {
+            let cmd = self.command_buffer.pop_front().unwrap();
+            self.process_action(cmd);
+        }
+    }
+
     pub fn process_action(&mut self, action: Action) {
         match action {
             Action::NavigateBy(rel) => {
@@ -233,9 +252,35 @@ impl App {
                 sheet.selected_cell = new_cell;
             }
             Action::EditCell {clear} => {
-                let sheet = self.active_sheet().unwrap();
-                let cell = &sheet.rows[sheet.selected_cell.row()].cells[sheet.selected_cell.col()];
-                self.mode = Mode::EditingCell(TextInput::new(if clear { "" } else { cell.display.as_str() }))
+                let (cell, cell_config) = {
+                    let sheet = self.active_sheet().unwrap();
+                    let cell = &sheet.rows[sheet.selected_cell.row()].cells[sheet.selected_cell.col()];
+
+                    let col = &sheet.columns[sheet.selected_cell.col()];
+                    let cell_config = sheet.table_config.fields.iter().find(|f| f.name == col.table_column).unwrap();
+
+                    (cell.clone(), cell_config.clone())
+                };
+
+                match &cell_config.field_type {
+                    FieldType::StringType => {
+                        self.mode = Mode::EditingCell(TextInput::new(if clear { "" } else { cell.display.as_str() }))
+                    }
+                    FieldType::SelectType(opts) => {
+                        let mut select_next_option = false;
+                        for opt in opts {
+                            if select_next_option {
+                                self.push_action(Action::SaveCell { value: opt.key.clone() });
+                                return;
+                            }
+                            if opt.key == cell.display.as_str() {
+                                select_next_option = true;
+                            }
+                        }
+                        self.push_action(Action::SaveCell { value: opts[0].key.clone() });
+                    }
+                    FieldType::BelongsTo(_, _) => {}
+                }
             }
             Action::AddRow => {
                 {
@@ -251,17 +296,22 @@ impl App {
                 sheet.selected_cell = sheet.selected_cell + Vector2i::new(0, 1);
                 self.populate_sheet(self.current_sheet);
             }
-            Action::SaveCell => {
+
+            Action::FinishEdit => {
+                let sheet = self.active_sheet().unwrap();
+                let Mode::EditingCell(ref text_input) = self.mode else { return };
+
+                if sheet.rows[sheet.selected_cell.row()].cells[sheet.selected_cell.col()].display == text_input.input {
+                    self.push_action(Action::SetMode(Mode::Normal));
+                    return;
+                }
+
+                self.push_action(Action::SaveCell { value: text_input.input.clone() });
+            }
+            Action::SaveCell { value } => {
                 let sheet = self.active_sheet().unwrap();
 
                 {
-                    let Mode::EditingCell(ref text_input) = self.mode else { return };
-
-                    if sheet.rows[sheet.selected_cell.row()].cells[sheet.selected_cell.col()].display == text_input.input {
-                        self.mode = Mode::Normal;
-                        return;
-                    }
-
                     let mut stmt = self.conn.prepare(
                         &format!(
                             "UPDATE {} SET {} = ? WHERE __order = ?",
@@ -269,7 +319,7 @@ impl App {
                             sheet.columns[sheet.selected_cell.col()].table_column,
                         )).unwrap();
 
-                    stmt.execute((&text_input.input, sheet.rows[sheet.selected_cell.row()].rowid)).unwrap();
+                    stmt.execute((&value, sheet.rows[sheet.selected_cell.row()].rowid)).unwrap();
                 }
 
                 self.populate_sheet(self.current_sheet);
@@ -278,6 +328,9 @@ impl App {
             },
             Action::CancelEdit => {
                 self.mode = Mode::Normal;
+            }
+            Action::SetMode(mode) => {
+                self.mode = mode;
             }
         }
     }
@@ -294,12 +347,12 @@ impl App {
                 self.debug_text = format!("{:#?} \n\n {:#?}", self.mode, self.config);
 
                 match (&mut self.mode, k.code) {
-                    (Mode::EditingCell(_), KeyCode::Esc) => self.process_action(Action::CancelEdit),
+                    (Mode::EditingCell(_), KeyCode::Esc) => self.push_action(Action::CancelEdit),
                     (Mode::EditingCell(_), KeyCode::Tab) => {
-                        self.process_action(Action::SaveCell);
-                        self.process_action(Action::NextCell);
+                        self.push_action(Action::FinishEdit);
+                        self.push_action(Action::NextCell);
                     },
-                    (Mode::EditingCell(_), KeyCode::Enter) => self.process_action(Action::SaveCell),
+                    (Mode::EditingCell(_), KeyCode::Enter) => self.push_action(Action::FinishEdit),
                     (Mode::EditingCell(ref mut input), KeyCode::Char(c)) => input.insert_char_at_cursor(c),
                     (Mode::EditingCell(ref mut input), KeyCode::Backspace) => input.delete_char(),
                     (Mode::EditingCell(_), _) => {},
@@ -319,19 +372,19 @@ impl App {
                                 self.populate_sheet(next_sheet);
                                 self.current_sheet = next_sheet;
                             },
-                            KeyCode::Right => self.process_action(Action::NavigateBy(Vector2i::new(1, 0))),
-                            KeyCode::Left => self.process_action(Action::NavigateBy(Vector2i::new(-1, 0))),
-                            KeyCode::Up => self.process_action(Action::NavigateBy(Vector2i::new(0, -1))),
-                            KeyCode::Down => self.process_action(Action::NavigateBy(Vector2i::new(0, 1))),
-                            KeyCode::Tab => self.process_action(Action::NextCell),
-                            KeyCode::Char('a') => self.process_action(Action::AddRow),
-                            KeyCode::Char('h') => self.process_action(Action::NavigateBy(Vector2i::new(-1, 0))),
-                            KeyCode::Char('j') => self.process_action(Action::NavigateBy(Vector2i::new(0, 1))),
-                            KeyCode::Char('k') => self.process_action(Action::NavigateBy(Vector2i::new(0, -1))),
-                            KeyCode::Char('l') => self.process_action(Action::NavigateBy(Vector2i::new(1, 0))),
-                            KeyCode::Char('e') => self.process_action(Action::EditCell { clear: false }),
-                            KeyCode::Char('E') => self.process_action(Action::EditCell { clear: true }),
-                            KeyCode::Enter => self.process_action(Action::EditCell { clear: false }),
+                            KeyCode::Right => self.push_action(Action::NavigateBy(Vector2i::new(1, 0))),
+                            KeyCode::Left => self.push_action(Action::NavigateBy(Vector2i::new(-1, 0))),
+                            KeyCode::Up => self.push_action(Action::NavigateBy(Vector2i::new(0, -1))),
+                            KeyCode::Down => self.push_action(Action::NavigateBy(Vector2i::new(0, 1))),
+                            KeyCode::Tab => self.push_action(Action::NextCell),
+                            KeyCode::Char('a') => self.push_action(Action::AddRow),
+                            KeyCode::Char('h') => self.push_action(Action::NavigateBy(Vector2i::new(-1, 0))),
+                            KeyCode::Char('j') => self.push_action(Action::NavigateBy(Vector2i::new(0, 1))),
+                            KeyCode::Char('k') => self.push_action(Action::NavigateBy(Vector2i::new(0, -1))),
+                            KeyCode::Char('l') => self.push_action(Action::NavigateBy(Vector2i::new(1, 0))),
+                            KeyCode::Char('e') => self.push_action(Action::EditCell { clear: false }),
+                            KeyCode::Char('E') => self.push_action(Action::EditCell { clear: true }),
+                            KeyCode::Enter => self.push_action(Action::EditCell { clear: false }),
                             KeyCode::Char('q') => self.should_quit = true,
                             _ => (),
                         }
@@ -342,9 +395,12 @@ impl App {
             Event::Paste(_) => {}
             Event::Resize(_, _) => {}
         };
+
+        self.process_actions();
     }
 }
 
+#[derive(Clone)]
 pub struct CellData {
     pub display: String,
 }

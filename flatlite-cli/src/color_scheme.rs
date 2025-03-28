@@ -26,7 +26,7 @@ impl Default for ColorScheme {
             sheet_heading_active: Style::from((Black, Rgb(200, 200, 235))).add_modifier(Modifier::BOLD),
             sheet_heading_inactive: Style::from((Rgb(0, 0, 40), White)),
             cell: Style::from((Reset, Rgb(0, 0, 10))),
-            cell_aligned: Style::from((Reset, Rgb(0, 0, 40))),
+            cell_aligned: Style::from((Reset, Rgb(20, 20, 60))),
             cell_selected: Style::from((White, Rgb(100, 100, 200))),
             cell_editing: Style::from((Black, White)),
             cell_editing_cursor: Style::from((Black, Rgb(180, 180, 240))),

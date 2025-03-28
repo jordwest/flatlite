@@ -1,17 +1,20 @@
 status,type,milestone_id,title
-done,feat,proto,Parse csv to sqlite
-done,refactor,proto,Refactor everything out of main
-done,feat,proto,Allow editing string fields
-done,feat,proto,Write sqlite back to csv
-done,perf,proto,Test OFFSET performance (plenty fast enough for 500k rows)
-doing,feat,proto,KDL configuration format for schema validation
-doing,feat,proto,"Simple multichoice fields (eg todo, doing, done)"
-todo,feat,idea,Board view (kanban style)
-todo,feat,idea,Group by in sheet view
-todo,perf,idea,Optimise ingestion by batching inserts
+done,feat,proto,"Simple multichoice fields (eg todo, doing, done)"
 todo,imp,proto,Scrolling sheets
 todo,imp,proto,null should show as grayed out and not actually save
 todo,feat,proto,allow rows to be deleted
 todo,imp,proto,allow cursor movement in text editing
 todo,refactor,proto,refactor all SQL queries to db module
+todo,feat,idea,Board view (kanban style)
+todo,feat,idea,Group by in sheet view
+todo,perf,idea,Optimise ingestion by batching inserts
 todo,feat,idea,"Selecting, cutting, pasting rows"
+todo,feat,idea,Filter columns
+todo,feat,idea,Sort columns
+todo,feat,idea,Undo/redo
+done,feat,proto,KDL configuration format for schema validation
+done,perf,proto,Test OFFSET performance (plenty fast enough for 500k rows)
+done,feat,proto,Parse csv to sqlite
+done,refactor,proto,Refactor everything out of main
+done,feat,proto,Allow editing string fields
+done,feat,proto,Write sqlite back to csv

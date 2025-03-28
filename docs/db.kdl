@@ -15,12 +15,12 @@ schema {
         }
         field "type" type="select" {
             option "feat" label="Feature"
-            option "refactor" label="Refactoring"
-            option "bug" label="Bugfix"
             option "imp" label="Improvement"
+            option "bug" label="Bugfix"
+            option "refactor" label="Refactoring"
             option "perf" label="Performance"
         }
-        field "milestone_id" label="Milestone" type=belongs_to related_entity="milestone" related_key="id"
+        field "milestone_id" label="Milestone" type="belongs_to" related_entity="milestone" related_key="id"
         field "title"
     }
 
