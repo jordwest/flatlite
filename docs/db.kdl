@@ -1,15 +1,4 @@
 schema {
-    table "bigdata" {
-        file "bigdata.csv"
-
-        field "id"
-        field "title"
-        field "extra" type="select" {
-            option "one" label="Option one"
-            option "two" label="Option two"
-            option "shoe" label="Option shoe"
-        }
-    }
 
     table "todo" label="Todos" {
         // Ingest multiple files to populate this table
@@ -46,5 +35,17 @@ schema {
         field "milestone" label="Milestone" type="belongs_to" related_entity="milestone" related_key="id"
         field "datetime"
         field "duration"
+    }
+    
+    table "bigdata" {
+        file "bigdata.csv"
+
+        field "id"
+        field "title"
+        field "extra" type="select" {
+            option "one" label="Option one"
+            option "two" label="Option two"
+            option "shoe" label="Option shoe"
+        }
     }
 }

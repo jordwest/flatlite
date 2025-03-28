@@ -1,6 +1,12 @@
 use kdl::{KdlDocument, KdlNode};
 use eyre::Result;
 
+#[derive(Debug, Clone, Copy)]
+pub struct TableId(usize);
+
+#[derive(Debug, Clone, Copy)]
+pub struct FieldId(usize);
+
 /// Represents the db.kdl file
 #[derive(Debug, Default)]
 pub struct DbConfig {
@@ -26,31 +32,37 @@ impl DbConfig {
 #[derive(Debug, Default)]
 pub struct DbSchema {
     pub tables: Vec<DbTable>,
+    pub fields: Vec<DbField>,
 }
 
-impl DbSchema {
-    pub fn read_node(&mut self, node: &KdlNode) -> Result<()> {
-        for child in node.iter_children() {
-            if child.name().repr() == Some("table") {
-                let table = DbTable::from_node(&child)?;
-                self.tables.push(table);
-            }
-        }
-        Ok(())
-    }
-}
-
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct DbTable {
+    pub id: TableId,
     pub name: String,
     pub label: Option<String>,
     pub files: Vec<String>,
     pub fields: Vec<DbField>,
 }
 
-impl DbTable {
-    pub fn from_node(node: &KdlNode) -> Result<DbTable> {
-        let mut table = DbTable::default();
+impl DbSchema {
+    pub fn read_node(&mut self, node: &KdlNode) -> Result<()> {
+        for child in node.iter_children() {
+            if child.name().repr() == Some("table") {
+                let table = self.table_node(&child, self.tables.len())?;
+                self.tables.push(table);
+            }
+        }
+        Ok(())
+    }
+    
+    pub fn table_node(&mut self, node: &KdlNode, idx: usize) -> Result<DbTable> {
+        let mut table = DbTable {
+            id: TableId(idx),
+            name: String::new(),
+            label: None,
+            files: Vec::new(),
+            fields: Vec::new(),
+        };
 
         for entry in node.iter() {
             if let Some(key) = entry.name() {
@@ -64,7 +76,8 @@ impl DbTable {
 
         for child in node.iter_children() {
             if child.name().repr() == Some("field") {
-                let field = DbField::from_node(child)?;
+                let field = DbField::from_node(child, self.fields.len())?;
+                self.fields.push(field.clone());
                 table.fields.push(field);
             }
             if child.name().repr() == Some("file") {
@@ -80,14 +93,16 @@ impl DbTable {
 
 #[derive(Debug, Clone)]
 pub struct DbField {
+    pub id: FieldId,
     pub name: String,
     pub label: Option<String>,
     pub field_type: FieldType,
 }
 
 impl DbField {
-    pub fn from_node(node: &KdlNode) -> Result<DbField> {
+    pub fn from_node(node: &KdlNode, idx: usize) -> Result<DbField> {
         let mut field = DbField {
+            id: FieldId(idx),
             name: String::new(),
             label: None,
             field_type: FieldType::StringType,

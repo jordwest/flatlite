@@ -1,5 +1,6 @@
 status,type,milestone_id,title
 doing,imp,proto,Select/autocomplete for looking up related entities
+doing,refactor,proto,Non-string ids for columns and tables (and a central repository for looking them up)
 todo,imp,proto,null should show as grayed out and not actually save
 todo,feat,proto,allow rows to be deleted
 todo,imp,next,allow cursor movement in text editing
