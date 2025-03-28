@@ -1,4 +1,4 @@
-mod text;
+pub mod text;
 
 use std::collections::VecDeque;
 use std::fs;
@@ -298,9 +298,9 @@ impl App {
             Action::NextCell => {
                 let sheet = self.active_sheet_mut().unwrap();
                 let bounds = Vector2i::new(sheet.columns.len() as i32, sheet.total_count as i32);
-                
+
                 let mut new_cell = (sheet.selected_cell + Vector2i::new(1, 0)).clamp_wrapped(bounds);
-                
+
                 if new_cell.x == 0 {
                     // Move to next row
                     new_cell.y = new_cell.y + 1;

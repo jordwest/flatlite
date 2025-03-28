@@ -14,6 +14,10 @@ pub struct ColorScheme {
     pub cell_selected: Style,
     pub cell_editing: Style,
     pub cell_editing_cursor: Style,
+    pub autocomplete_search: Style,
+    pub autocomplete_search_placeholder: Style,
+    pub autocomplete_item: Style,
+    pub autocomplete_item_selected: Style,
 }
 
 impl Default for ColorScheme {
@@ -30,6 +34,10 @@ impl Default for ColorScheme {
             cell_selected: Style::from((White, Rgb(100, 100, 200))),
             cell_editing: Style::from((Black, White)),
             cell_editing_cursor: Style::from((Black, Rgb(180, 180, 240))),
+            autocomplete_search: Style::from((White, Rgb(80, 80, 80))),
+            autocomplete_search_placeholder: Style::from((Rgb(120, 120, 120), Rgb(80, 80, 80))),
+            autocomplete_item: Style::from((White, Black)),
+            autocomplete_item_selected: Style::from((Black, Rgb(200, 200, 255))),
         }
     }
 }

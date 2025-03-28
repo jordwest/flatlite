@@ -1,3 +1,5 @@
+pub mod autocomplete;
+
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::prelude::{Style, Widget};

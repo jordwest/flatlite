@@ -1,4 +1,4 @@
-mod widgets;
+pub mod widgets;
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -13,7 +13,7 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
 
     let column_constraints: Vec<Constraint> = sheet.columns.iter().map(|c| Constraint::Max(c.width)).collect();
     let column_layout = Layout::new(Direction::Horizontal, column_constraints).split(area);
-    
+
     let view_cursor = sheet.view_cursor();
 
     for (i, col) in sheet.columns.iter().enumerate() {

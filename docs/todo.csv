@@ -1,16 +1,18 @@
 status,type,milestone_id,title
-todo,imp,proto,Select/autocomplete for looking up related entities
+doing,imp,proto,Select/autocomplete for looking up related entities
 todo,imp,proto,null should show as grayed out and not actually save
 todo,feat,proto,allow rows to be deleted
-todo,imp,proto,allow cursor movement in text editing
-todo,refactor,proto,refactor all SQL queries to db module
+todo,imp,next,allow cursor movement in text editing
+todo,refactor,next,refactor all SQL queries to db module
+todo,imp,next,Use config labels for sheet and column headings
+todo,feat,next,Group by in sheet view
+todo,feat,next,Filter columns
+todo,feat,next,Sort columns
 todo,feat,idea,Board view (kanban style)
-todo,feat,idea,Group by in sheet view
 todo,perf,idea,Optimise ingestion by batching inserts
 todo,feat,idea,"Selecting, cutting, pasting rows"
-todo,feat,idea,Filter columns
-todo,feat,idea,Sort columns
 todo,feat,idea,Undo/redo
+todo,feat,idea,"Different views configured in KDL (grouping, sorting, filtered views)"
 done,bug,proto,Crashes when pressing tab after finish editing
 done,imp,proto,Scrolling sheets
 done,feat,proto,"Simple multichoice fields (eg todo, doing, done)"
