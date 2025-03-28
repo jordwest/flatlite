@@ -31,7 +31,7 @@ fn main() -> Result<()> {
 
     let config_content = read_to_string("../docs/db.kdl")?;
     let config = DbConfig::parse_from_str(&config_content)?;
-    
+
     for table in &config.schema.tables {
         for file in &table.files {
             ingest_csv_table(&mut conn, &mut schema, &table.name, &format!("../docs/{}", file))?;
@@ -55,7 +55,7 @@ impl Widget for &App {
             .direction(Direction::Horizontal)
             .constraints(vec![
                 Constraint::Ratio(1, 1),
-                Constraint::Min(40),
+                Constraint::Min(80),
             ]).split(area);
 
         sheet_view(&self, layout[0], buf);

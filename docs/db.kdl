@@ -6,15 +6,15 @@ schema {
     table "todo" label="Todos" {
         // Ingest multiple files to populate this table
         file "todo.csv"
-        //file "another-file.csv"
+//        file "another-file.csv"
 
         field "status" type="select" label="Status" {
             option "todo" label="Todo"
             option "doing" label="Doing"
             option "done" label="Done"
         }
-        field "milestone_id" label="Milestone" type="belongs_to" related_entity="milestone" related_key="id"
-        field "title" type="title"
+        field "milestone_id" label="Milestone" type=belongs_to related_entity="milestone" related_key="id"
+        field "title"
     }
 
     table "milestone" label="Milestones" {

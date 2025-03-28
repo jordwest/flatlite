@@ -104,6 +104,8 @@ impl DbField {
             }
         }
 
+        field.field_type = FieldType::from_node(node)?;
+
         Ok(field)
     }
 }
@@ -115,8 +117,52 @@ pub enum FieldType {
     BelongsTo(String, String),
 }
 
+impl FieldType {
+    pub fn from_node(node: &KdlNode) -> Result<FieldType> {
+        // Default to string type if no type is specified
+        let Some(field_type_id) = node.get("type") else { return Ok(FieldType::StringType) };
+
+        match field_type_id.to_string().as_str() {
+            "select" => {
+                let options = SelectOption::options_from_node(node)?;
+                Ok(FieldType::SelectType(options))
+            },
+            "belongs_to" => {
+                let Some(related_entity) = node.get("related_entity") else { return Err(eyre::eyre!("Missing related_entity on belongs_to")) };
+                let Some(related_key) = node.get("related_key") else { return Err(eyre::eyre!("Missing related_key on belongs_to")) };
+                Ok(FieldType::BelongsTo(related_entity.to_string(), related_key.to_string()))
+            },
+            _ => Err(eyre::eyre!("Unknown field type {}", field_type_id)),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct SelectOption {
     key: String,
     label: Option<String>,
+}
+
+impl SelectOption {
+    pub fn options_from_node(node: &KdlNode) -> Result<Vec<SelectOption>> {
+        let mut vec = Vec::with_capacity(node.iter_children().count());
+
+        for child in node.iter_children() {
+            if child.name().repr() == Some("option") {
+                let mut option = SelectOption { key: String::new(), label: None };
+                for entry in child.iter() {
+                    if let Some(key) = entry.name() {
+                        if key.repr() == Some("label") {
+                            option.label = Some(entry.value().to_string());
+                        }
+                    } else {
+                        option.key = entry.value().to_string();
+                    }
+                }
+                vec.push(option);
+            }
+        }
+
+        Ok(vec)
+    }
 }
