@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TextInput {
     pub input: String,
     pub char_index: usize,

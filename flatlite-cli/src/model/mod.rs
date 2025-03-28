@@ -66,9 +66,15 @@ impl SheetCache {
 }
 
 #[derive(Debug)]
+pub struct RelatedRecord {
+    pub label: String,
+}
+
+#[derive(Debug)]
 pub enum Mode {
     Normal,
     EditingCell(TextInput),
+    EditBelongsTo { search: TextInput, results: Vec<RelatedRecord>, selected_index: usize }
 }
 
 pub enum Action {
@@ -204,6 +210,31 @@ impl App {
         self.sheets_cache[index] = Some(cache);
     }
 
+    pub fn refresh_related_autocomplete(&mut self) {
+        let related_table = {
+            let sheet = self.active_sheet().unwrap();
+            let col_name = &sheet.columns[sheet.selected_cell.col()].table_column;
+            let relation = sheet.table_config.fields.iter().find(|f| &f.name == col_name).unwrap();
+            let FieldType::BelongsTo(related_table, related_id) = &relation.field_type else { return };
+            related_table
+            // (sheet.table_name.clone(), col_name.clone())
+        };
+
+        let Mode::EditBelongsTo { search, results, selected_index } = &self.mode else { return };
+
+        let results = {
+            let mut stmt = self.conn.prepare(&format!("SELECT title FROM {}", related_table)).unwrap();
+            let titles = stmt.query_map([], |r| r.get(0)).unwrap();
+            let mut results = Vec::new();
+            for title in titles {
+                results.push(RelatedRecord { label: title.unwrap() });
+            }
+            results
+        };
+
+        self.push_action(Action::SetMode(Mode::EditBelongsTo { search: search.clone(), results, selected_index: *selected_index }));
+    }
+
     pub fn active_sheet(&self) -> Option<&SheetCache> {
         self.sheets_cache.get(self.current_sheet).unwrap().into()
     }
@@ -280,7 +311,11 @@ impl App {
                     .clamp_wrapped(Vector2i::new(sheet.columns.len() as i32, sheet.total_count as i32));
             }
             Action::RefreshView => {
-                self.populate_sheet(self.current_sheet);
+                match self.mode {
+                    Mode::Normal => self.populate_sheet(self.current_sheet),
+                    Mode::EditingCell(_) => {},
+                    Mode::EditBelongsTo { .. } => self.refresh_related_autocomplete(),
+                }
             }
             Action::Page(amount) => {
                 let sheet = self.active_sheet().unwrap();
@@ -336,7 +371,14 @@ impl App {
                         }
                         self.push_action(Action::SaveCell { value: opts[0].key.clone() });
                     }
-                    FieldType::BelongsTo(_, _) => {}
+                    FieldType::BelongsTo(_, _) => {
+                        self.push_action(Action::SetMode(Mode::EditBelongsTo {
+                            results: Vec::new(),
+                            selected_index: 0,
+                            search: TextInput::new(""),
+                        }));
+                        self.push_action(Action::RefreshView);
+                    }
                 }
             }
             Action::AddRow => {
@@ -386,12 +428,8 @@ impl App {
                 self.mode = Mode::Normal;
                 self.save_entity(self.current_sheet).unwrap();
             },
-            Action::CancelEdit => {
-                self.mode = Mode::Normal;
-            }
-            Action::SetMode(mode) => {
-                self.mode = mode;
-            }
+            Action::CancelEdit => self.mode = Mode::Normal,
+            Action::SetMode(mode) => self.mode = mode
         }
     }
 
@@ -416,6 +454,10 @@ impl App {
                     (Mode::EditingCell(ref mut input), KeyCode::Char(c)) => input.insert_char_at_cursor(c),
                     (Mode::EditingCell(ref mut input), KeyCode::Backspace) => input.delete_char(),
                     (Mode::EditingCell(_), _) => {},
+                    (Mode::EditBelongsTo { search, .. }, KeyCode::Char(c)) => search.insert_char_at_cursor(c),
+                    (Mode::EditBelongsTo { search, .. }, KeyCode::Backspace) => search.delete_char(),
+                    (Mode::EditBelongsTo { .. }, KeyCode::Esc) => self.push_action(Action::SetMode(Mode::Normal)),
+                    (Mode::EditBelongsTo { .. }, _) => {},
                     (Mode::Normal, code) => {
                         match code {
                             KeyCode::Char('[') => {

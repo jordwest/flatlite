@@ -14,8 +14,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::Paragraph;
 use crate::db::ingest_csv_table;
 use crate::dbconfig::DbConfig;
-use crate::model::{App, Schema};
-use crate::model::text::TextInput;
+use crate::model::{App, Mode, Schema};
 use crate::util::Vector2i;
 use crate::view::sheet_view;
 use crate::view::widgets::autocomplete::Autocomplete;
@@ -43,7 +42,6 @@ fn main() -> Result<()> {
     // ingest_csv_table(&conn, &mut schema, "time_entry", "../docs/time_entries.csv")?;
     // ingest_csv_table(&conn, &mut schema, "milestone", "../docs/milestone.csv")?;
 
-
     let mut terminal = ratatui::init();
     let area = terminal.get_frame().area();
     let initial_size = Vector2i::new(area.width as i32, area.height as i32);
@@ -69,23 +67,18 @@ impl Widget for &App {
         let debug = Paragraph::new(self.debug_text.clone()).style(self.color_scheme.debug_panel);
         debug.render(layout[1], buf);
 
-        let search = TextInput {
-            input: "Hello".to_string(),
-            char_index: 0,
-        };
-        let mut items = Vec::new();
-        items.push("Hello".to_string());
-        items.push("Another".to_string());
-        items.push("Item".to_string());
-        let ac = Autocomplete {
-            search: &search,
-            placeholder: "Search milestone",
-            selected_index: 1,
-            color_scheme: &self.color_scheme,
-            items: &items,
-        };
+        if let Mode::EditBelongsTo { search, selected_index, results } = &self.mode {
+            let items = results.iter().map(|r| r.label.to_string()).collect();
+            let ac = Autocomplete {
+                search: &search,
+                placeholder: "Search milestone",
+                selected_index: *selected_index,
+                color_scheme: &self.color_scheme,
+                items: &items,
+            };
 
-        ac.render(layout[0].inner(Margin::new(20, 10)), buf);
+            ac.render(layout[0].inner(Margin::new(20, 10)), buf);
+        }
     }
 }
 
