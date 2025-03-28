@@ -11,7 +11,17 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
     // let entity = app.current_entity();
     let sheet = app.active_sheet().unwrap();
 
-    let column_constraints: Vec<Constraint> = sheet.columns.iter().map(|c| Constraint::Max(c.width)).collect();
+    let last_col_idx = sheet.columns.len() - 1;
+    let column_constraints: Vec<Constraint> = sheet.columns
+        .iter().enumerate()
+        .map(|(i, c)| {
+            if i == last_col_idx {
+                Constraint::Fill(1)
+            } else {
+                Constraint::Max(c.width)
+            }
+        })
+        .collect();
     let column_layout = Layout::new(Direction::Horizontal, column_constraints).split(area);
 
     let view_cursor = sheet.view_cursor();
