@@ -9,7 +9,7 @@ pub fn main() -> Result<()> {
 
     writer.write_record(["id","title","extra"])?;
 
-    for i in 0..500_000 {
+    for i in 0..10_000 {
         writer.write_record([i.to_string(), "".to_string(), "".to_string()])?;
     }
 

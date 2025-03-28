@@ -13,13 +13,15 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
 
     let column_constraints: Vec<Constraint> = sheet.columns.iter().map(|c| Constraint::Max(c.width)).collect();
     let column_layout = Layout::new(Direction::Horizontal, column_constraints).split(area);
+    
+    let view_cursor = sheet.view_cursor();
 
     for (i, col) in sheet.columns.iter().enumerate() {
         let col_area = column_layout[i];
         let heading_cell_area = Rect::new(col_area.x, 0, col_area.width, 1);
         buf.set_string(col_area.x, col_area.y, &col.table_column, app.color_scheme.sheet_heading_inactive);
 
-        let style = if i == sheet.selected_cell.col() { app.color_scheme.sheet_heading_active } else { app.color_scheme.sheet_heading_inactive };
+        let style = if i == view_cursor.col() { app.color_scheme.sheet_heading_active } else { app.color_scheme.sheet_heading_inactive };
         buf.set_style(heading_cell_area, style)
     }
 
@@ -28,13 +30,13 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
 
     for row in &sheet.rows {
         for (i, col_area) in column_layout.iter().enumerate() {
-            
+
             if y > area.height {
                 return;
             }
-            
-            let is_selected_col = i == sheet.selected_cell.col();
-            let is_selected_row = row_idx == sheet.selected_cell.row();
+
+            let is_selected_col = i == view_cursor.col();
+            let is_selected_row = row_idx == view_cursor.row();
             let is_selected_cell = is_selected_col && is_selected_row;
 
             let style = match () {
@@ -66,15 +68,30 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
     }
 }
 
+pub fn statusbar_view(app: &App, area: Rect, buf: &mut Buffer) {
+    buf.set_style(area, app.color_scheme.status_bar);
+
+    let Some(sheet) = app.active_sheet() else { return };
+
+    let status_string = format!("{}-{} / {}     Cursor {}, {}", sheet.start_offset, sheet.end_offset(), sheet.total_count, sheet.selected_cell.x, sheet.selected_cell.y);
+    buf.set_stringn(area.x, area.y, status_string, area.width as usize, Style::default());
+}
+
 pub fn sheet_view(app: &App, area: Rect, buf: &mut Buffer) {
-    let layout = Layout::new(Direction::Vertical, vec![Constraint::Ratio(1, 1), Constraint::Min(1)]).split(area);
+    let layout = Layout::new(Direction::Vertical, vec![
+        Constraint::Ratio(1, 1),
+        Constraint::Min(1),
+        Constraint::Min(1)
+    ]).split(area);
 
     table_view(app, layout[0], buf);
+
+    statusbar_view(app, layout[1], buf);
 
     let tab = TabBar {
         tabs: app.schema.entities.iter().map(|e| e.table.to_string()).collect(),
         color_scheme: &app.color_scheme,
         selected_index: app.current_sheet,
     };
-    tab.render(layout[1], buf);
+    tab.render(layout[2], buf);
 }

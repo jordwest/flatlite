@@ -1,7 +1,11 @@
 schema {
-//    table "bigdata" {
-//        file "bigdata.csv"
-//    }
+    table "bigdata" {
+        file "bigdata.csv"
+
+        field "id"
+        field "title"
+        field "extra"
+    }
 
     table "todo" label="Todos" {
         // Ingest multiple files to populate this table

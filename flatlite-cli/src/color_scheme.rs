@@ -5,7 +5,7 @@ use Color::{Rgb, Reset, White, Black};
 pub struct ColorScheme {
     pub active_tab: Style,
     pub inactive_tab: Style,
-    // pub status_bar: Style,
+    pub status_bar: Style,
     pub sheet_heading_inactive: Style,
     pub sheet_heading_active: Style,
     pub debug_panel: Style,
@@ -21,7 +21,7 @@ impl Default for ColorScheme {
         ColorScheme {
             active_tab: Style::from((Black, White)).add_modifier(Modifier::BOLD),
             inactive_tab: Style::from((White, Black)),
-            // status_bar: Style::default(),
+            status_bar: Style::from((Black, White)),
             debug_panel: Style::from((Reset, Rgb(4, 22, 51))),
             sheet_heading_active: Style::from((Black, Rgb(200, 200, 235))).add_modifier(Modifier::BOLD),
             sheet_heading_inactive: Style::from((Rgb(0, 0, 40), White)),

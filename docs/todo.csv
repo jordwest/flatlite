@@ -1,6 +1,7 @@
 status,type,milestone_id,title
-done,feat,proto,"Simple multichoice fields (eg todo, doing, done)"
-todo,imp,proto,Scrolling sheets
+done,imp,proto,Scrolling sheets
+todo,imp,proto,Select/autocomplete for looking up related entities
+todo,bug,proto,Crashes when pressing tab after finish editing
 todo,imp,proto,null should show as grayed out and not actually save
 todo,feat,proto,allow rows to be deleted
 todo,imp,proto,allow cursor movement in text editing
@@ -12,6 +13,7 @@ todo,feat,idea,"Selecting, cutting, pasting rows"
 todo,feat,idea,Filter columns
 todo,feat,idea,Sort columns
 todo,feat,idea,Undo/redo
+done,feat,proto,"Simple multichoice fields (eg todo, doing, done)"
 done,feat,proto,KDL configuration format for schema validation
 done,perf,proto,Test OFFSET performance (plenty fast enough for 500k rows)
 done,feat,proto,Parse csv to sqlite

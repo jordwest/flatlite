@@ -15,6 +15,7 @@ use ratatui::widgets::Paragraph;
 use crate::db::ingest_csv_table;
 use crate::dbconfig::DbConfig;
 use crate::model::{App, Schema};
+use crate::util::Vector2i;
 use crate::view::sheet_view;
 
 fn main() -> Result<()> {
@@ -40,9 +41,13 @@ fn main() -> Result<()> {
     // ingest_csv_table(&conn, &mut schema, "time_entry", "../docs/time_entries.csv")?;
     // ingest_csv_table(&conn, &mut schema, "milestone", "../docs/milestone.csv")?;
 
-    let app = App::new(conn, schema, config);
 
-    let terminal = ratatui::init();
+    let mut terminal = ratatui::init();
+    let area = terminal.get_frame().area();
+    let initial_size = Vector2i::new(area.width as i32, area.height as i32);
+    
+    let app = App::new(conn, schema, config, initial_size);
+    
     let result = run(terminal, app);
     ratatui::restore();
     result
@@ -70,6 +75,8 @@ fn run(mut terminal: DefaultTerminal, mut app: App) -> Result<()> {
             frame.render_widget(&app, frame.area())
         }).wrap_err("Failed to render app")?;
 
+        let area = terminal.get_frame().area();
+        app.available_size = Vector2i::new(area.width as i32, area.height as i32);
         app.process_event(event::read()?);
     }
 
