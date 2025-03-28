@@ -1,7 +1,5 @@
 status,type,milestone_id,title
 doing,imp,proto,Select/autocomplete for looking up related entities
-todo,refactor,proto,Move actions into own module
-todo,refactor,proto,Move event handling into own module
 todo,imp,proto,null should show as grayed out and not actually save
 todo,feat,proto,allow rows to be deleted
 todo,imp,next,allow cursor movement in text editing
@@ -15,6 +13,8 @@ todo,perf,idea,Optimise ingestion by batching inserts
 todo,feat,idea,"Selecting, cutting, pasting rows"
 todo,feat,idea,Undo/redo
 todo,feat,idea,"Different views configured in KDL (grouping, sorting, filtered views)"
+done,refactor,proto,Move actions into own module
+done,refactor,proto,Move event handling into own module
 done,bug,proto,Crashes when pressing tab after finish editing
 done,imp,proto,Scrolling sheets
 done,feat,proto,"Simple multichoice fields (eg todo, doing, done)"
