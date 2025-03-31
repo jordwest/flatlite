@@ -1,27 +1,27 @@
 status,type,milestone_id,title
-doing,imp,proto,Select/autocomplete for looking up related entities
-doing,refactor,proto,Non-string ids for columns and tables (and a central repository for looking them up)
-todo,imp,proto,null should show as grayed out and not actually save
-todo,feat,proto,allow rows to be deleted
-todo,imp,next,allow cursor movement in text editing
-todo,refactor,next,refactor all SQL queries to db module
-todo,imp,next,Use config labels for sheet and column headings
-todo,feat,next,Group by in sheet view
-todo,feat,next,Filter columns
-todo,feat,next,Sort columns
+doing,imp,b1,Select/autocomplete for looking up related entities
+doing,refactor,b1,Non-string ids for columns and tables (and a central repository for looking them up)
+todo,imp,b1,null should show as grayed out and not actually save
+todo,feat,b1,allow rows to be deleted
+todo,imp,b2,allow cursor movement in text editing
+todo,refactor,b2,refactor all SQL queries to db module
+todo,imp,b2,Use config labels for sheet and column headings
+todo,feat,b2,Group by in sheet view
+todo,feat,b2,Filter columns
+todo,feat,b2,Sort columns
 todo,feat,idea,Board view (kanban style)
 todo,perf,idea,Optimise ingestion by batching inserts
 todo,feat,idea,"Selecting, cutting, pasting rows"
 todo,feat,idea,Undo/redo
 todo,feat,idea,"Different views configured in KDL (grouping, sorting, filtered views)"
-done,refactor,proto,Move actions into own module
-done,refactor,proto,Move event handling into own module
-done,bug,proto,Crashes when pressing tab after finish editing
-done,imp,proto,Scrolling sheets
-done,feat,proto,"Simple multichoice fields (eg todo, doing, done)"
-done,feat,proto,KDL configuration format for schema validation
-done,perf,proto,Test OFFSET performance (plenty fast enough for 500k rows)
-done,feat,proto,Parse csv to sqlite
-done,refactor,proto,Refactor everything out of main
-done,feat,proto,Allow editing string fields
-done,feat,proto,Write sqlite back to csv
+done,refactor,b1,Move actions into own module
+done,refactor,b1,Move event handling into own module
+done,bug,b1,Crashes when pressing tab after finish editing
+done,imp,b1,Scrolling sheets
+done,feat,b1,"Simple multichoice fields (eg todo, doing, done)"
+done,feat,b1,KDL configuration format for schema validation
+done,perf,b1,Test OFFSET performance (plenty fast enough for 500k rows)
+done,feat,b1,Parse csv to sqlite
+done,refactor,b1,Refactor everything out of main
+done,feat,b1,Allow editing string fields
+done,feat,b1,Write sqlite back to csv
