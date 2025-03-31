@@ -7,6 +7,7 @@ pub mod dbconfig;
 pub mod schema;
 
 use std::fs::{read_to_string};
+use std::path::PathBuf;
 use rusqlite::{Connection};
 use eyre::{Context, Result};
 use ratatui::{DefaultTerminal};
@@ -14,8 +15,9 @@ use ratatui::crossterm::event;
 use ratatui::prelude::*;
 use ratatui::widgets::Paragraph;
 use crate::db::ingest_csv_table;
-use crate::dbconfig::DbConfig;
-use crate::model::{App, Mode, Schema};
+use crate::dbconfig::Config;
+use crate::model::{App, Mode};
+use crate::schema::{Schema, TableId};
 use crate::util::Vector2i;
 use crate::view::sheet_view;
 use crate::view::widgets::autocomplete::Autocomplete;
@@ -29,15 +31,15 @@ fn main() -> Result<()> {
     // let conn = Connection::open("test.sqlite")?;
     let mut conn = Connection::open_in_memory()?;
 
-    let mut schema = Schema::default();
+    let path_to_config = PathBuf::from("../docs/db.kdl");
+    let config_content = read_to_string(&path_to_config)?;
+    let config = Config::parse_from_str(&config_content, &path_to_config)?;
 
-    let config_content = read_to_string("../docs/db.kdl")?;
-    let config = DbConfig::parse_from_str(&config_content)?;
+    let mut schema: Schema = (&config).try_into()?;
+    let tables: Vec<(TableId, PathBuf)> = schema.tables.iter().map(|t| (t.id, t.source_file.clone())).collect();
 
-    for table in &config.schema.tables {
-        for file in &table.files {
-            ingest_csv_table(&mut conn, &mut schema, &table.name, &format!("../docs/{}", file))?;
-        }
+    for (table_id, source_file) in tables {
+        ingest_csv_table(&mut conn, &mut schema, table_id, &source_file)?;
     }
     // ingest_csv_table(&conn, &mut schema, "todo", "../docs/todo.csv")?;
     // ingest_csv_table(&conn, &mut schema, "time_entry", "../docs/time_entries.csv")?;
@@ -47,7 +49,7 @@ fn main() -> Result<()> {
     let area = terminal.get_frame().area();
     let initial_size = Vector2i::new(area.width as i32, area.height as i32);
 
-    let app = App::new(conn, schema, config, initial_size);
+    let app = App::new(conn, schema, initial_size);
 
     let result = run(terminal, app);
     ratatui::restore();

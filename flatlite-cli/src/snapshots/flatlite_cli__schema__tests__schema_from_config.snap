@@ -9,29 +9,83 @@ Schema {
                 0,
             ),
             name: "todo",
+            source_file: "./todo.csv",
+            fields: [
+                FieldId(
+                    0,
+                ),
+                FieldId(
+                    1,
+                ),
+                FieldId(
+                    2,
+                ),
+                FieldId(
+                    3,
+                ),
+            ],
         },
         TableSchema {
             id: TableId(
                 1,
             ),
             name: "milestone",
+            source_file: "./milestone.csv",
+            fields: [
+                FieldId(
+                    4,
+                ),
+                FieldId(
+                    5,
+                ),
+                FieldId(
+                    6,
+                ),
+            ],
         },
         TableSchema {
             id: TableId(
                 2,
             ),
             name: "time_entries",
+            source_file: "./time_entries.csv",
+            fields: [
+                FieldId(
+                    7,
+                ),
+                FieldId(
+                    8,
+                ),
+                FieldId(
+                    9,
+                ),
+            ],
         },
         TableSchema {
             id: TableId(
                 3,
             ),
             name: "bigdata",
+            source_file: "./bigdata.csv",
+            fields: [
+                FieldId(
+                    10,
+                ),
+                FieldId(
+                    11,
+                ),
+                FieldId(
+                    12,
+                ),
+            ],
         },
     ],
     fields: [
         FieldSchema {
             id: FieldId(
+                0,
+            ),
+            table_id: TableId(
                 0,
             ),
             name: "status",
@@ -61,6 +115,9 @@ Schema {
         FieldSchema {
             id: FieldId(
                 1,
+            ),
+            table_id: TableId(
+                0,
             ),
             name: "type",
             field_type: SelectField {
@@ -102,6 +159,9 @@ Schema {
             id: FieldId(
                 2,
             ),
+            table_id: TableId(
+                0,
+            ),
             name: "milestone_id",
             field_type: BelongsToField(
                 TableId(
@@ -116,12 +176,18 @@ Schema {
             id: FieldId(
                 3,
             ),
+            table_id: TableId(
+                0,
+            ),
             name: "title",
             field_type: StringField,
         },
         FieldSchema {
             id: FieldId(
                 4,
+            ),
+            table_id: TableId(
+                1,
             ),
             name: "id",
             field_type: StringField,
@@ -130,6 +196,9 @@ Schema {
             id: FieldId(
                 5,
             ),
+            table_id: TableId(
+                1,
+            ),
             name: "title",
             field_type: StringField,
         },
@@ -137,12 +206,18 @@ Schema {
             id: FieldId(
                 6,
             ),
+            table_id: TableId(
+                1,
+            ),
             name: "time_budget",
             field_type: StringField,
         },
         FieldSchema {
             id: FieldId(
                 7,
+            ),
+            table_id: TableId(
+                2,
             ),
             name: "milestone",
             field_type: BelongsToField(
@@ -158,12 +233,18 @@ Schema {
             id: FieldId(
                 8,
             ),
+            table_id: TableId(
+                2,
+            ),
             name: "datetime",
             field_type: StringField,
         },
         FieldSchema {
             id: FieldId(
                 9,
+            ),
+            table_id: TableId(
+                2,
             ),
             name: "duration",
             field_type: StringField,
@@ -172,6 +253,9 @@ Schema {
             id: FieldId(
                 10,
             ),
+            table_id: TableId(
+                3,
+            ),
             name: "id",
             field_type: StringField,
         },
@@ -179,12 +263,18 @@ Schema {
             id: FieldId(
                 11,
             ),
+            table_id: TableId(
+                3,
+            ),
             name: "title",
             field_type: StringField,
         },
         FieldSchema {
             id: FieldId(
                 12,
+            ),
+            table_id: TableId(
+                3,
             ),
             name: "extra",
             field_type: SelectField {

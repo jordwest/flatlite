@@ -29,7 +29,8 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
     for (i, col) in sheet.columns.iter().enumerate() {
         let col_area = column_layout[i];
         let heading_cell_area = Rect::new(col_area.x, 0, col_area.width, 1);
-        buf.set_string(col_area.x, col_area.y, &col.table_column, app.color_scheme.sheet_heading_inactive);
+        let field = app.schema.field(col.field_id);
+        buf.set_string(col_area.x, col_area.y, &field.name, app.color_scheme.sheet_heading_inactive);
 
         let style = if i == view_cursor.col() { app.color_scheme.sheet_heading_active } else { app.color_scheme.sheet_heading_inactive };
         buf.set_style(heading_cell_area, style)
@@ -99,9 +100,9 @@ pub fn sheet_view(app: &App, area: Rect, buf: &mut Buffer) {
     statusbar_view(app, layout[1], buf);
 
     let tab = TabBar {
-        tabs: app.schema.entities.iter().map(|e| e.table.to_string()).collect(),
+        tabs: app.schema.tables.iter().map(|e| (e.id, e.name.to_string())).collect(),
         color_scheme: &app.color_scheme,
-        selected_index: app.current_sheet,
+        selected_id: app.current_sheet,
     };
     tab.render(layout[2], buf);
 }

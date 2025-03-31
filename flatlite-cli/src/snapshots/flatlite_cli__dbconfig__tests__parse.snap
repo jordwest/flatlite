@@ -1,37 +1,42 @@
 ---
 source: src/dbconfig.rs
-expression: "ConfigParseState::parse_from_str(include_str!(\"./config_example.kdl\"))"
+expression: "Config::parse_from_str(include_str!(\"./config_example.kdl\"),\n&PathBuf::from(\"./config_example.kdl\"))"
 ---
 Ok(
-    ConfigParseState {
+    Config {
+        config_source: "./config_example.kdl",
         tables: [
-            TempTable {
+            ConfigTable {
                 id: TableId(
                     0,
                 ),
                 name: "todo",
+                source_file: "./todo.csv",
             },
-            TempTable {
+            ConfigTable {
                 id: TableId(
                     1,
                 ),
                 name: "milestone",
+                source_file: "./milestone.csv",
             },
-            TempTable {
+            ConfigTable {
                 id: TableId(
                     2,
                 ),
                 name: "time_entries",
+                source_file: "./time_entries.csv",
             },
-            TempTable {
+            ConfigTable {
                 id: TableId(
                     3,
                 ),
                 name: "bigdata",
+                source_file: "./bigdata.csv",
             },
         ],
         fields: [
-            TempField {
+            ConfigField {
                 id: FieldId(
                     0,
                 ),
@@ -65,7 +70,7 @@ Ok(
                     },
                 ],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     1,
                 ),
@@ -111,7 +116,7 @@ Ok(
                     },
                 ],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     2,
                 ),
@@ -130,7 +135,7 @@ Ok(
                 name: "milestone_id",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     3,
                 ),
@@ -143,7 +148,7 @@ Ok(
                 name: "title",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     4,
                 ),
@@ -156,7 +161,7 @@ Ok(
                 name: "id",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     5,
                 ),
@@ -169,7 +174,7 @@ Ok(
                 name: "title",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     6,
                 ),
@@ -182,7 +187,7 @@ Ok(
                 name: "time_budget",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     7,
                 ),
@@ -201,7 +206,7 @@ Ok(
                 name: "milestone",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     8,
                 ),
@@ -214,7 +219,7 @@ Ok(
                 name: "datetime",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     9,
                 ),
@@ -227,7 +232,7 @@ Ok(
                 name: "duration",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     10,
                 ),
@@ -240,7 +245,7 @@ Ok(
                 name: "id",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     11,
                 ),
@@ -253,7 +258,7 @@ Ok(
                 name: "title",
                 options: [],
             },
-            TempField {
+            ConfigField {
                 id: FieldId(
                     12,
                 ),

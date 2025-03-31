@@ -1,6 +1,6 @@
-use crate::dbconfig::FieldType;
 use crate::model::{App, Mode};
 use crate::model::text::TextInput;
+use crate::schema::FieldType;
 use crate::util::Vector2i;
 
 pub enum Action {
@@ -62,20 +62,20 @@ impl App {
                 let (cell, cell_config) = {
                     let sheet = self.active_sheet().unwrap();
                     let cursor = sheet.view_cursor();
-                    let cell = &sheet.rows[cursor.row()].cells[cursor.col()];
+                    let cell = sheet.rows[cursor.row()].cells[cursor.col()].clone();
                     let col = &sheet.columns[cursor.col()];
-                    let cell_config = sheet.table_config.fields.iter().find(|f| f.name == col.table_column).unwrap();
+                    let field = self.schema.field(col.field_id);
 
-                    (cell.clone(), cell_config.clone())
+                    (cell, field)
                 };
 
                 match &cell_config.field_type {
-                    FieldType::StringType => {
+                    FieldType::StringField => {
                         self.mode = Mode::EditingCell(TextInput::new(if clear { "" } else { cell.display.as_str() }))
                     }
-                    FieldType::SelectType(opts) => {
+                    FieldType::SelectField { options } => {
                         let mut select_next_option = false;
-                        for opt in opts {
+                        for opt in options {
                             if select_next_option {
                                 self.push_action(Action::SaveCell { value: opt.key.clone() });
                                 return;
@@ -84,9 +84,9 @@ impl App {
                                 select_next_option = true;
                             }
                         }
-                        self.push_action(Action::SaveCell { value: opts[0].key.clone() });
+                        self.push_action(Action::SaveCell { value: options[0].key.clone() });
                     }
-                    FieldType::BelongsTo(_, _) => {
+                    FieldType::BelongsToField(_, _) => {
                         self.push_action(Action::SetMode(Mode::EditBelongsTo {
                             results: Vec::new(),
                             selected_index: 0,
@@ -99,12 +99,13 @@ impl App {
             Action::AddRow => {
                 {
                     let sheet = self.active_sheet().unwrap();
+                    let table = self.schema.table(sheet.table_id);
                     let cursor = sheet.view_cursor();
                     let row = &sheet.rows[cursor.row()];
                     let new_row_id = row.rowid + 1;
 
-                    self.conn.execute(&format!("UPDATE {} SET __order = __order + 1 WHERE __order >= ?", sheet.table_name), [new_row_id]).unwrap();
-                    self.conn.execute(&format!("INSERT INTO {} (__order) VALUES (?)", sheet.table_name), [new_row_id]).unwrap();
+                    self.conn.execute(&format!("UPDATE {} SET __order = __order + 1 WHERE __order >= ?", table.name), [new_row_id]).unwrap();
+                    self.conn.execute(&format!("INSERT INTO {} (__order) VALUES (?)", table.name), [new_row_id]).unwrap();
                 }
 
                 let sheet = self.active_sheet_mut().unwrap();
@@ -126,14 +127,16 @@ impl App {
             }
             Action::SaveCell { value } => {
                 let sheet = self.active_sheet().unwrap();
+                let table = self.schema.table(sheet.table_id);
                 let cursor = sheet.view_cursor();
+                let selected_field_name = self.schema.field(sheet.columns[cursor.col()].field_id).name.to_string();
 
                 {
                     let mut stmt = self.conn.prepare(
                         &format!(
                             "UPDATE {} SET {} = ? WHERE __order = ?",
-                            sheet.table_name,
-                            sheet.columns[cursor.col()].table_column,
+                            table.name,
+                            selected_field_name,
                         )).unwrap();
 
                     stmt.execute((&value, sheet.rows[cursor.row()].rowid)).unwrap();

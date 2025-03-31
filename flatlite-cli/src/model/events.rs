@@ -1,6 +1,7 @@
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 use crate::model::{App, Mode};
 use crate::model::actions::Action;
+use crate::schema::TableId;
 use crate::util::Vector2i;
 
 impl App {
@@ -30,18 +31,18 @@ impl App {
                     (Mode::Normal, code) => {
                         match code {
                             KeyCode::Char('[') => {
-                                let next_sheet = if self.current_sheet == 0 {
-                                    self.schema.entities.len() - 1
+                                let next_sheet = if self.current_sheet.0 == 0 {
+                                    self.schema.tables.len() - 1
                                 } else {
-                                    self.current_sheet - 1
+                                    self.current_sheet.0 - 1
                                 };
-                                self.populate_sheet(next_sheet);
-                                self.current_sheet = next_sheet;
+                                self.populate_sheet(TableId(next_sheet));
+                                self.current_sheet = TableId(next_sheet);
                             },
                             KeyCode::Char(']') => {
-                                let next_sheet = (self.current_sheet + 1) % self.schema.entities.len();
-                                self.populate_sheet(next_sheet);
-                                self.current_sheet = next_sheet;
+                                let next_sheet = (self.current_sheet.0 + 1) % self.schema.tables.len();
+                                self.populate_sheet(TableId(next_sheet));
+                                self.current_sheet = TableId(next_sheet);
                             },
                             KeyCode::Right => self.push_action(Action::MoveCursor(Vector2i::new(1, 0))),
                             KeyCode::Left => self.push_action(Action::MoveCursor(Vector2i::new(-1, 0))),
@@ -73,6 +74,6 @@ impl App {
 
         self.process_actions();
 
-        self.debug_text = format!("{:#?} \n\n {:#?}", self.mode, self.config);
+        self.debug_text = format!("{:#?} \n\n {:#?}", self.mode, self.schema);
     }
 }

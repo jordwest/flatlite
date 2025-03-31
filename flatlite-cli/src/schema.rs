@@ -1,42 +1,94 @@
-use ratatui::layout::Constraint::Percentage;
-use crate::dbconfig::{ConfigParseState, FieldId, SelectOption, TableId};
+use std::path::PathBuf;
+use crate::dbconfig::Config;
 
-#[derive(Debug)]
-struct TableSchema {
-    id: TableId,
-    name: String,
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub struct TableId(pub usize);
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub struct FieldId(pub usize);
+
+#[derive(Debug, Clone)]
+pub struct TableSchema {
+    pub id: TableId,
+    pub name: String,
+    pub source_file: PathBuf,
+    pub fields: Vec<FieldId>,
 }
 
 #[derive(Debug)]
-struct FieldSchema {
-    id: FieldId,
-    name: String,
-    field_type: FieldType,
+pub struct FieldSchema {
+    pub id: FieldId,
+    pub table_id: TableId,
+    pub name: String,
+    pub field_type: FieldType,
 }
 
 #[derive(Debug)]
-struct Schema {
-    tables: Vec<TableSchema>,
-    fields: Vec<FieldSchema>,
+pub struct Schema {
+    pub tables: Vec<TableSchema>,
+    pub fields: Vec<FieldSchema>,
 }
 
 #[derive(Debug)]
-enum FieldType {
+pub enum FieldType {
     StringField,
     SelectField { options: Vec<SelectOption> },
     BelongsToField(TableId, FieldId),
 }
 
-impl TryFrom<&ConfigParseState> for Schema {
+#[derive(Debug, Clone)]
+pub struct SelectOption {
+    pub key: String,
+    pub label: Option<String>,
+}
+
+impl Schema {
+    pub fn table(&self, id: TableId) -> &TableSchema {
+        &self.tables[id.0]
+    }
+
+    pub fn field(&self, id: FieldId) -> &FieldSchema {
+        &self.fields[id.0]
+    }
+
+    pub fn fields_for_table(&self, id: TableId) -> Vec<&FieldSchema> {
+        let table = self.table(id);
+        let mut vec: Vec<&FieldSchema> = Vec::with_capacity(table.fields.len());
+        for field_id in &table.fields {
+            vec.push(self.field(*field_id));
+        }
+        vec
+    }
+
+    pub fn table_by_name(&self, name: &str) -> Option<&TableSchema> {
+        self.tables.iter().find(|t| t.name == name)
+    }
+
+    pub fn field_by_name(&self, table_id: TableId, name: &str) -> Option<&FieldSchema> {
+        self.fields.iter().find(|t| t.name == name && t.table_id == table_id)
+    }
+    
+    /// Convert a list of field IDs to column names to be used in a SQL query
+    pub fn field_query(&self, field_ids: &Vec<FieldId>) -> String {
+        let mut fields = Vec::with_capacity(field_ids.len());
+        for field_id in field_ids {
+            fields.push(self.field(*field_id).name.to_string());
+        }
+        fields.join(", ")
+    }
+}
+
+impl TryFrom<&Config> for Schema {
     type Error = eyre::Error;
 
-    fn try_from(config: &ConfigParseState) -> Result<Self, Self::Error> {
-        let tables = config.tables.iter().map(|t| TableSchema { id: t.id, name: t.name.to_string() }).collect();
-        let mut fields = Vec::with_capacity(config.fields.len());
+    fn try_from(config: &Config) -> Result<Self, Self::Error> {
+        let mut tables: Vec<TableSchema> = config.tables.iter().map(|t| TableSchema { id: t.id, name: t.name.to_string(), fields: Vec::new(), source_file: t.source_file.clone() }).collect();
+        let mut fields: Vec<FieldSchema> = Vec::with_capacity(config.fields.len());
         
         for field in &config.fields {
             let field_schema = FieldSchema {
                 id: field.id,
+                table_id: field.table_id,
                 name: field.name.to_string(),
                 field_type: match &field.type_name {
                     None => FieldType::StringField,
@@ -56,6 +108,11 @@ impl TryFrom<&ConfigParseState> for Schema {
             };
 
             fields.push(field_schema);
+            for t in &mut tables {
+                if t.id == field.table_id {
+                    t.fields.push(field.id)
+                }
+            };
         }
 
         Ok(Schema {
@@ -72,7 +129,7 @@ mod tests {
 
     #[test]
     fn test_schema_from_config() -> Result<()> {
-        let config = ConfigParseState::parse_from_str(include_str!("./config_example.kdl"))?;
+        let config = Config::parse_from_str(include_str!("./config_example.kdl"), &PathBuf::from("./config_example.kdl"))?;
         let schema: Schema = (&config).try_into()?;
         insta::assert_debug_snapshot!(schema);
         Ok(())

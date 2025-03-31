@@ -1,10 +1,6 @@
 schema {
 
-    table "todo" label="Todos" {
-        // Ingest multiple files to populate this table
-        file "todo.csv"
-        file "another-file.csv"
-
+    table "todo" label="Todos" file="todo.csv" {
         field "status" type="select" label="Status" {
             option "todo" label="Todo"
             option "doing" label="Doing"
@@ -21,25 +17,19 @@ schema {
         field "title"
     }
 
-    table "milestone" label="Milestones" {
-        file "milestone.csv"
-
+    table "milestone" label="Milestones" file="milestone.csv" {
         field "id"
         field "title"
         field "time_budget"
     }
 
-    table "time_entries" label="Time Entries" {
-        file "time_entries.csv"
-
+    table "time_entries" label="Time Entries" file="time_entries.csv" {
         field "milestone" label="Milestone" type="belongs_to" related_entity="milestone" related_key="id"
         field "datetime"
         field "duration"
     }
 
-    table "bigdata" {
-        file "bigdata.csv"
-
+    table "bigdata" file="bigdata.csv" {
         field "id"
         field "title"
         field "extra" type="select" {
