@@ -11,6 +11,8 @@ pub enum Action {
     NextCell,
     FinishEdit,
     CancelEdit,
+    AutocompleteNext,
+    AutocompletePrev,
     RefreshView,
     SetMode(Mode),
     EditCell { clear: bool },
@@ -35,6 +37,21 @@ impl App {
             Action::Page(amount) => {
                 let sheet = self.active_sheet().unwrap();
                 self.process_action(Action::MoveCursor(Vector2i::new(0, amount * (sheet.rows.len() as i32))));
+            }
+            Action::AutocompleteNext => {
+                let Mode::EditBelongsTo { ref mut selected_index, ref mut results, .. } = self.mode else { return };
+                *selected_index += 1;
+                if *selected_index >= results.len() {
+                    *selected_index = 0;
+                }
+            }
+            Action::AutocompletePrev => {
+                let Mode::EditBelongsTo { ref mut selected_index, ref mut results, .. } = self.mode else { return };
+                if *selected_index == 0 {
+                    *selected_index = results.len() - 1;
+                } else {
+                    *selected_index -= 1;
+                }
             }
             Action::Scroll(amount) => {
                 let sheet = self.active_sheet_mut().unwrap();
@@ -116,9 +133,9 @@ impl App {
             Action::FinishEdit => {
                 let sheet = self.active_sheet().unwrap();
                 let cursor = sheet.view_cursor();
-                
+
                 let existing_value = &sheet.rows[cursor.row()].cells[cursor.col()].display;
-                
+
                 let update_value = match self.mode {
                     Mode::EditingCell(ref text_input) if &text_input.input == existing_value => None,
                     Mode::EditingCell(ref text_input) => {

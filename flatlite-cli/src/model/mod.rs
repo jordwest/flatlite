@@ -188,8 +188,9 @@ impl App {
         let Mode::EditBelongsTo { search, results, selected_index } = &self.mode else { return };
 
         let results: Vec<RelatedRecord> = {
-            let mut stmt = self.conn.prepare(&format!("SELECT id, title FROM {}", related_table.name)).unwrap();
-            stmt.query_map([], |r| Ok(RelatedRecord {
+            let search_term = format!("%{}%", search.input);
+            let mut stmt = self.conn.prepare(&format!("SELECT id, title FROM {} WHERE title LIKE ? OR id LIKE ?", related_table.name)).unwrap();
+            stmt.query_map([&search_term, &search_term], |r| Ok(RelatedRecord {
                 key: r.get(0)?,
                 label: r.get(1)?,
             }))

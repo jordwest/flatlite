@@ -13,7 +13,7 @@ use eyre::{Context, Result};
 use ratatui::{DefaultTerminal};
 use ratatui::crossterm::event;
 use ratatui::prelude::*;
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Clear, Paragraph};
 use crate::db::ingest_csv_table;
 use crate::dbconfig::Config;
 use crate::model::{App, Mode};
@@ -71,7 +71,7 @@ impl Widget for &App {
         debug.render(layout[1], buf);
 
         if let Mode::EditBelongsTo { search, selected_index, results } = &self.mode {
-            let items = results.iter().map(|r| r.label.to_string()).collect();
+            let items = results.iter().map(|r| format!("{} {}", r.key, r.label)).collect();
             let ac = Autocomplete {
                 search: &search,
                 placeholder: "Search milestone",
@@ -80,7 +80,8 @@ impl Widget for &App {
                 items: &items,
             };
 
-            ac.render(layout[0].inner(Margin::new(20, 10)), buf);
+            let popup_area = layout[0].inner(Margin::new(20, 10));
+            ac.render(popup_area, buf);
         }
     }
 }

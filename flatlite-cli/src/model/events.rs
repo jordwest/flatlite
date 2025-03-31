@@ -1,4 +1,4 @@
-use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
+use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use crate::model::{App, Mode};
 use crate::model::actions::Action;
 use crate::schema::TableId;
@@ -24,10 +24,22 @@ impl App {
                     (Mode::EditingCell(ref mut input), KeyCode::Char(c)) => input.insert_char_at_cursor(c),
                     (Mode::EditingCell(ref mut input), KeyCode::Backspace) => input.delete_char(),
                     (Mode::EditingCell(_), _) => {},
-                    (Mode::EditBelongsTo { search, .. }, KeyCode::Char(c)) => search.insert_char_at_cursor(c),
-                    (Mode::EditBelongsTo { search, .. }, KeyCode::Backspace) => search.delete_char(),
+                    (Mode::EditBelongsTo { search, .. }, KeyCode::Char(c)) => {
+                        search.insert_char_at_cursor(c);
+                        self.refresh_related_autocomplete();
+                    },
+                    (Mode::EditBelongsTo { search, .. }, KeyCode::Backspace) => {
+                        search.delete_char();
+                        self.refresh_related_autocomplete();
+                    },
                     (Mode::EditBelongsTo { .. }, KeyCode::Esc) => self.push_action(Action::SetMode(Mode::Normal)),
                     (Mode::EditBelongsTo { .. }, KeyCode::Enter) => self.push_action(Action::FinishEdit),
+
+                    (Mode::EditBelongsTo { .. }, KeyCode::Down) => self.push_action(Action::AutocompleteNext),
+                    (Mode::EditBelongsTo { .. }, KeyCode::Tab) if k.modifiers.intersects(KeyModifiers::SHIFT) => self.push_action(Action::AutocompletePrev),
+                    (Mode::EditBelongsTo { .. }, KeyCode::Tab) => self.push_action(Action::AutocompleteNext),
+                    (Mode::EditBelongsTo { .. }, KeyCode::Up) => self.push_action(Action::AutocompletePrev),
+
                     (Mode::EditBelongsTo { .. }, _) => {},
                     (Mode::Normal, code) => {
                         match code {
