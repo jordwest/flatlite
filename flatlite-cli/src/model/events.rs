@@ -27,6 +27,7 @@ impl App {
                     (Mode::EditBelongsTo { search, .. }, KeyCode::Char(c)) => search.insert_char_at_cursor(c),
                     (Mode::EditBelongsTo { search, .. }, KeyCode::Backspace) => search.delete_char(),
                     (Mode::EditBelongsTo { .. }, KeyCode::Esc) => self.push_action(Action::SetMode(Mode::Normal)),
+                    (Mode::EditBelongsTo { .. }, KeyCode::Enter) => self.push_action(Action::FinishEdit),
                     (Mode::EditBelongsTo { .. }, _) => {},
                     (Mode::Normal, code) => {
                         match code {

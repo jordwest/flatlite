@@ -115,15 +115,27 @@ impl App {
 
             Action::FinishEdit => {
                 let sheet = self.active_sheet().unwrap();
-                let Mode::EditingCell(ref text_input) = self.mode else { return };
                 let cursor = sheet.view_cursor();
+                
+                let existing_value = &sheet.rows[cursor.row()].cells[cursor.col()].display;
+                
+                let update_value = match self.mode {
+                    Mode::EditingCell(ref text_input) if &text_input.input == existing_value => None,
+                    Mode::EditingCell(ref text_input) => {
+                        Some(text_input.input.clone())
+                    },
+                    Mode::EditBelongsTo { ref selected_index, ref results, .. } => {
+                        Some(results[*selected_index].key.to_string())
+                    },
+                    Mode::Normal => {
+                        None
+                    }
+                };
 
-                if sheet.rows[cursor.row()].cells[cursor.col()].display == text_input.input {
-                    self.push_action(Action::SetMode(Mode::Normal));
-                    return;
+                match update_value {
+                    None => self.push_action(Action::SetMode(Mode::Normal)),
+                    Some(new_value) => self.push_action(Action::SaveCell { value: new_value }),
                 }
-
-                self.push_action(Action::SaveCell { value: text_input.input.clone() });
             }
             Action::SaveCell { value } => {
                 let sheet = self.active_sheet().unwrap();

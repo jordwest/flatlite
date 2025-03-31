@@ -50,6 +50,7 @@ impl SheetCache {
 
 #[derive(Debug)]
 pub struct RelatedRecord {
+    pub key: String,
     pub label: String,
 }
 
@@ -186,14 +187,15 @@ impl App {
 
         let Mode::EditBelongsTo { search, results, selected_index } = &self.mode else { return };
 
-        let results = {
-            let mut stmt = self.conn.prepare(&format!("SELECT title FROM {}", related_table.name)).unwrap();
-            let titles = stmt.query_map([], |r| r.get(0)).unwrap();
-            let mut results = Vec::new();
-            for title in titles {
-                results.push(RelatedRecord { label: title.unwrap() });
-            }
-            results
+        let results: Vec<RelatedRecord> = {
+            let mut stmt = self.conn.prepare(&format!("SELECT id, title FROM {}", related_table.name)).unwrap();
+            stmt.query_map([], |r| Ok(RelatedRecord {
+                key: r.get(0)?,
+                label: r.get(1)?,
+            }))
+                .unwrap()
+                .collect::<rusqlite::Result<Vec<RelatedRecord>>>()
+                .unwrap()
         };
 
         self.push_action(Action::SetMode(Mode::EditBelongsTo { search: search.clone(), results, selected_index: *selected_index }));
@@ -210,7 +212,7 @@ impl App {
     pub fn save_entity(&self, table_id: TableId) -> Result<()> {
         let table = self.schema.table(table_id);
         let columns = self.schema.fields_for_table(table_id);
-        
+
         let column_names: Vec<String> = columns.iter().map(|c| c.name.to_string()).collect();
 
         let mut stmt = self.conn.prepare(
@@ -220,7 +222,7 @@ impl App {
         let mut rows = stmt.query([])?;
 
         let temp_filename = table.source_file.with_extension(".new");
-        
+
         {
             let file = File::create(&temp_filename).wrap_err_with(|| format!("Failed to create temp file {}", temp_filename.to_str().unwrap_or_default()))?;
             let mut writer = csv::Writer::from_writer(file);
