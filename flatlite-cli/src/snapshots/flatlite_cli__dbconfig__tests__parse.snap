@@ -1,0 +1,292 @@
+---
+source: src/dbconfig.rs
+expression: "ConfigParseState::parse_from_str(include_str!(\"./config_example.kdl\"))"
+---
+Ok(
+    ConfigParseState {
+        tables: [
+            TempTable {
+                id: TableId(
+                    0,
+                ),
+                name: "todo",
+            },
+            TempTable {
+                id: TableId(
+                    1,
+                ),
+                name: "milestone",
+            },
+            TempTable {
+                id: TableId(
+                    2,
+                ),
+                name: "time_entries",
+            },
+            TempTable {
+                id: TableId(
+                    3,
+                ),
+                name: "bigdata",
+            },
+        ],
+        fields: [
+            TempField {
+                id: FieldId(
+                    0,
+                ),
+                table_id: TableId(
+                    0,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: Some(
+                    "select",
+                ),
+                name: "status",
+                options: [
+                    SelectOption {
+                        key: "todo",
+                        label: Some(
+                            "Todo",
+                        ),
+                    },
+                    SelectOption {
+                        key: "doing",
+                        label: Some(
+                            "Doing",
+                        ),
+                    },
+                    SelectOption {
+                        key: "done",
+                        label: Some(
+                            "Done",
+                        ),
+                    },
+                ],
+            },
+            TempField {
+                id: FieldId(
+                    1,
+                ),
+                table_id: TableId(
+                    0,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: Some(
+                    "select",
+                ),
+                name: "type",
+                options: [
+                    SelectOption {
+                        key: "feat",
+                        label: Some(
+                            "Feature",
+                        ),
+                    },
+                    SelectOption {
+                        key: "imp",
+                        label: Some(
+                            "Improvement",
+                        ),
+                    },
+                    SelectOption {
+                        key: "bug",
+                        label: Some(
+                            "Bugfix",
+                        ),
+                    },
+                    SelectOption {
+                        key: "refactor",
+                        label: Some(
+                            "Refactoring",
+                        ),
+                    },
+                    SelectOption {
+                        key: "perf",
+                        label: Some(
+                            "Performance",
+                        ),
+                    },
+                ],
+            },
+            TempField {
+                id: FieldId(
+                    2,
+                ),
+                table_id: TableId(
+                    0,
+                ),
+                related_entity: Some(
+                    "milestone",
+                ),
+                related_key: Some(
+                    "id",
+                ),
+                type_name: Some(
+                    "belongs_to",
+                ),
+                name: "milestone_id",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    3,
+                ),
+                table_id: TableId(
+                    0,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: None,
+                name: "title",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    4,
+                ),
+                table_id: TableId(
+                    1,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: None,
+                name: "id",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    5,
+                ),
+                table_id: TableId(
+                    1,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: None,
+                name: "title",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    6,
+                ),
+                table_id: TableId(
+                    1,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: None,
+                name: "time_budget",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    7,
+                ),
+                table_id: TableId(
+                    2,
+                ),
+                related_entity: Some(
+                    "milestone",
+                ),
+                related_key: Some(
+                    "id",
+                ),
+                type_name: Some(
+                    "belongs_to",
+                ),
+                name: "milestone",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    8,
+                ),
+                table_id: TableId(
+                    2,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: None,
+                name: "datetime",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    9,
+                ),
+                table_id: TableId(
+                    2,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: None,
+                name: "duration",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    10,
+                ),
+                table_id: TableId(
+                    3,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: None,
+                name: "id",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    11,
+                ),
+                table_id: TableId(
+                    3,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: None,
+                name: "title",
+                options: [],
+            },
+            TempField {
+                id: FieldId(
+                    12,
+                ),
+                table_id: TableId(
+                    3,
+                ),
+                related_entity: None,
+                related_key: None,
+                type_name: Some(
+                    "select",
+                ),
+                name: "extra",
+                options: [
+                    SelectOption {
+                        key: "one",
+                        label: Some(
+                            "\"Option one\"",
+                        ),
+                    },
+                    SelectOption {
+                        key: "two",
+                        label: Some(
+                            "\"Option two\"",
+                        ),
+                    },
+                    SelectOption {
+                        key: "shoe",
+                        label: Some(
+                            "\"Option shoe\"",
+                        ),
+                    },
+                ],
+            },
+        ],
+    },
+)

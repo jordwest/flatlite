@@ -1,0 +1,214 @@
+---
+source: src/schema.rs
+expression: schema
+---
+Schema {
+    tables: [
+        TableSchema {
+            id: TableId(
+                0,
+            ),
+            name: "todo",
+        },
+        TableSchema {
+            id: TableId(
+                1,
+            ),
+            name: "milestone",
+        },
+        TableSchema {
+            id: TableId(
+                2,
+            ),
+            name: "time_entries",
+        },
+        TableSchema {
+            id: TableId(
+                3,
+            ),
+            name: "bigdata",
+        },
+    ],
+    fields: [
+        FieldSchema {
+            id: FieldId(
+                0,
+            ),
+            name: "status",
+            field_type: SelectField {
+                options: [
+                    SelectOption {
+                        key: "todo",
+                        label: Some(
+                            "Todo",
+                        ),
+                    },
+                    SelectOption {
+                        key: "doing",
+                        label: Some(
+                            "Doing",
+                        ),
+                    },
+                    SelectOption {
+                        key: "done",
+                        label: Some(
+                            "Done",
+                        ),
+                    },
+                ],
+            },
+        },
+        FieldSchema {
+            id: FieldId(
+                1,
+            ),
+            name: "type",
+            field_type: SelectField {
+                options: [
+                    SelectOption {
+                        key: "feat",
+                        label: Some(
+                            "Feature",
+                        ),
+                    },
+                    SelectOption {
+                        key: "imp",
+                        label: Some(
+                            "Improvement",
+                        ),
+                    },
+                    SelectOption {
+                        key: "bug",
+                        label: Some(
+                            "Bugfix",
+                        ),
+                    },
+                    SelectOption {
+                        key: "refactor",
+                        label: Some(
+                            "Refactoring",
+                        ),
+                    },
+                    SelectOption {
+                        key: "perf",
+                        label: Some(
+                            "Performance",
+                        ),
+                    },
+                ],
+            },
+        },
+        FieldSchema {
+            id: FieldId(
+                2,
+            ),
+            name: "milestone_id",
+            field_type: BelongsToField(
+                TableId(
+                    1,
+                ),
+                FieldId(
+                    4,
+                ),
+            ),
+        },
+        FieldSchema {
+            id: FieldId(
+                3,
+            ),
+            name: "title",
+            field_type: StringField,
+        },
+        FieldSchema {
+            id: FieldId(
+                4,
+            ),
+            name: "id",
+            field_type: StringField,
+        },
+        FieldSchema {
+            id: FieldId(
+                5,
+            ),
+            name: "title",
+            field_type: StringField,
+        },
+        FieldSchema {
+            id: FieldId(
+                6,
+            ),
+            name: "time_budget",
+            field_type: StringField,
+        },
+        FieldSchema {
+            id: FieldId(
+                7,
+            ),
+            name: "milestone",
+            field_type: BelongsToField(
+                TableId(
+                    1,
+                ),
+                FieldId(
+                    4,
+                ),
+            ),
+        },
+        FieldSchema {
+            id: FieldId(
+                8,
+            ),
+            name: "datetime",
+            field_type: StringField,
+        },
+        FieldSchema {
+            id: FieldId(
+                9,
+            ),
+            name: "duration",
+            field_type: StringField,
+        },
+        FieldSchema {
+            id: FieldId(
+                10,
+            ),
+            name: "id",
+            field_type: StringField,
+        },
+        FieldSchema {
+            id: FieldId(
+                11,
+            ),
+            name: "title",
+            field_type: StringField,
+        },
+        FieldSchema {
+            id: FieldId(
+                12,
+            ),
+            name: "extra",
+            field_type: SelectField {
+                options: [
+                    SelectOption {
+                        key: "one",
+                        label: Some(
+                            "\"Option one\"",
+                        ),
+                    },
+                    SelectOption {
+                        key: "two",
+                        label: Some(
+                            "\"Option two\"",
+                        ),
+                    },
+                    SelectOption {
+                        key: "shoe",
+                        label: Some(
+                            "\"Option shoe\"",
+                        ),
+                    },
+                ],
+            },
+        },
+    ],
+}

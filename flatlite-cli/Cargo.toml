@@ -10,3 +10,10 @@ kdl = "6.3.4"
 nom = "8.0.0"
 ratatui = "0.29.0"
 rusqlite = { version = "0.34.0", features = ["bundled"] }
+
+[dev-dependencies]
+insta = "1.42.2"
+
+[profile.dev.package]
+insta.opt-level = 3
+similar.opt-level = 3

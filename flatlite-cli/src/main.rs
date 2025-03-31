@@ -3,7 +3,8 @@ mod view;
 mod model;
 mod db;
 mod util;
-mod dbconfig;
+pub mod dbconfig;
+pub mod schema;
 
 use std::fs::{read_to_string};
 use rusqlite::{Connection};

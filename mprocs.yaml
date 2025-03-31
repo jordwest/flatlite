@@ -3,6 +3,12 @@ procs:
     shell: "fish"
   git:
     shell: "gitui"
+  test:
+    cwd: "flatlite-cli"
+    shell: "cargo test"
+  snapshot-review:
+    cwd: "flatlite-cli"
+    shell: "cargo insta review"
   flatlite-cli:
     cwd: "flatlite-cli"
     shell: "RUST_BACKTRACE=1 cargo run --bin flatlite-cli"

@@ -1,0 +1,51 @@
+schema {
+
+    table "todo" label="Todos" {
+        // Ingest multiple files to populate this table
+        file "todo.csv"
+        file "another-file.csv"
+
+        field "status" type="select" label="Status" {
+            option "todo" label="Todo"
+            option "doing" label="Doing"
+            option "done" label="Done"
+        }
+        field "type" type="select" {
+            option "feat" label="Feature"
+            option "imp" label="Improvement"
+            option "bug" label="Bugfix"
+            option "refactor" label="Refactoring"
+            option "perf" label="Performance"
+        }
+        field "milestone_id" label="Milestone" type="belongs_to" related_entity="milestone" related_key="id"
+        field "title"
+    }
+
+    table "milestone" label="Milestones" {
+        file "milestone.csv"
+
+        field "id"
+        field "title"
+        field "time_budget"
+    }
+
+    table "time_entries" label="Time Entries" {
+        file "time_entries.csv"
+
+        field "milestone" label="Milestone" type="belongs_to" related_entity="milestone" related_key="id"
+        field "datetime"
+        field "duration"
+    }
+
+    table "bigdata" {
+        file "bigdata.csv"
+
+        field "id"
+        field "title"
+        field "extra" type="select" {
+            option "one" label="Option one"
+            option "two" label="Option two"
+            option "shoe" label="Option shoe"
+        }
+    }
+}
