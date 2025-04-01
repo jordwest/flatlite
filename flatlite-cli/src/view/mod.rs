@@ -4,7 +4,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::*;
 use ratatui::widgets::Paragraph;
-use crate::model::{App, Mode};
+use crate::model::{App, CellValue, Mode};
 use crate::view::widgets::TabBar;
 
 pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
@@ -50,7 +50,7 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
             let is_selected_row = row_idx == view_cursor.row();
             let is_selected_cell = is_selected_col && is_selected_row;
 
-            let style = match () {
+            let mut style = match () {
                 _ if is_selected_cell && app.mode.is_editing() => app.color_scheme.cell_editing,
                 _ if is_selected_cell => app.color_scheme.cell_selected,
                 _ if (is_selected_row || is_selected_col) && app.mode.is_normal() => app.color_scheme.cell_aligned,
@@ -58,6 +58,10 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
             };
 
             let mut cell_display_text = row.cells[i].display.as_str();
+            
+            if let CellValue::NullValue = row.cells[i].value {
+                style = style.patch(app.color_scheme.cell_null);
+            }
 
             if let Mode::EditingCell(ref text_input) = app.mode {
                 if is_selected_cell {

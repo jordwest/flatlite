@@ -41,7 +41,7 @@ impl ExtractValue for KdlNode {
         Ok(self.get(key).ok_or(eyre::eyre!("Missing required property '{}' on node {}", key, self))?.to_string())
     }
     fn optional(&self, key: &str) -> Result<Option<String>> {
-        Ok(self.get(key).map(|v| v.to_string()))
+        Ok(self.get(key).map(|v| v.as_string().unwrap().to_string()))
     }
 }
 

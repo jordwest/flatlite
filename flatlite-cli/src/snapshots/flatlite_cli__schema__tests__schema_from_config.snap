@@ -282,19 +282,19 @@ Schema {
                     SelectOption {
                         key: "one",
                         label: Some(
-                            "\"Option one\"",
+                            "Option one",
                         ),
                     },
                     SelectOption {
                         key: "two",
                         label: Some(
-                            "\"Option two\"",
+                            "Option two",
                         ),
                     },
                     SelectOption {
                         key: "shoe",
                         label: Some(
-                            "\"Option shoe\"",
+                            "Option shoe",
                         ),
                     },
                 ],

@@ -1,4 +1,4 @@
-use crate::model::{App, Mode};
+use crate::model::{App, CellValue, Mode};
 use crate::model::text::TextInput;
 use crate::schema::FieldType;
 use crate::util::Vector2i;
@@ -88,7 +88,12 @@ impl App {
 
                 match &cell_config.field_type {
                     FieldType::StringField => {
-                        self.mode = Mode::EditingCell(TextInput::new(if clear { "" } else { cell.display.as_str() }))
+                        let display = match (clear, cell.value) {
+                            (true, _) => "".to_string(),
+                            (false, CellValue::NullValue) => "".to_string(),
+                            (false, v) => v.to_string(),
+                        };
+                        self.mode = Mode::EditingCell(TextInput::new(&display))
                     }
                     FieldType::SelectField { options } => {
                         let mut select_next_option = false;
@@ -97,7 +102,7 @@ impl App {
                                 self.push_action(Action::SaveCell { value: opt.key.clone() });
                                 return;
                             }
-                            if opt.key == cell.display.as_str() {
+                            if opt.key == cell.value.to_string() {
                                 select_next_option = true;
                             }
                         }

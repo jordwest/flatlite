@@ -23,12 +23,11 @@ use crate::view::sheet_view;
 use crate::view::widgets::autocomplete::Autocomplete;
 
 fn main() -> Result<()> {
-    match std::fs::remove_file("test.sqlite") {
-        Ok(_) => println!("Removed test file"),
-        Err(e) => println!("{:?}", e),
-    }
-
-    // let conn = Connection::open("test.sqlite")?;
+    // match std::fs::remove_file("test.sqlite") {
+    //     Ok(_) => println!("Removed test file"),
+    //     Err(e) => println!("{:?}", e),
+    // }
+    // let mut conn = Connection::open("test.sqlite")?;
     let mut conn = Connection::open_in_memory()?;
 
     let path_to_config = PathBuf::from("../docs/db.kdl");
