@@ -3,15 +3,17 @@ mod actions;
 mod events;
 
 use std::collections::{HashMap, VecDeque};
+use std::fmt::{Display, Formatter};
 use std::fs;
 use std::fs::File;
 use rusqlite::Connection;
 use rusqlite::types::{FromSql, ValueRef};
 use eyre::{Context, Result};
+use rusqlite::fallible_iterator::FallibleIterator;
 use crate::color_scheme::ColorScheme;
 use crate::model::actions::Action;
 use crate::model::text::TextInput;
-use crate::schema::{FieldId, FieldType, Schema, TableId, TableSchema};
+use crate::schema::{FieldId, FieldType, Schema, SelectOption, TableId, TableSchema};
 use crate::util::Vector2i;
 
 pub struct SheetRow {
@@ -152,7 +154,38 @@ impl App {
             };
 
             for (i, column) in columns.iter().enumerate() {
-                let cell_data: CellData = row.get(i + 1).unwrap();
+                let cell_value: CellValue = row.get(i + 1).unwrap();
+
+                let cell_data = match column.field_type {
+                    FieldType::StringField => { CellData {
+                        display: cell_value.to_string(),
+                        value: cell_value,
+                    } }
+                    FieldType::SelectField { ref options } => {
+                        let display = match options.iter().find(|o| &o.key == &cell_value.to_string()) {
+                            Some(SelectOption { label: Some(label), .. }) => label.clone(),
+                            _ => cell_value.to_string(),
+                        };
+                        CellData {
+                            display,
+                            value: cell_value,
+                        }
+                    }
+                    FieldType::BelongsToField(related_table_id, related_key_id) => {
+                        let related_table = self.schema.table(related_table_id);
+                        let related_field = self.schema.field(related_key_id);
+
+                        let mut stmt = self.conn.prepare(&format!("SELECT title FROM {} WHERE {} = ?", related_table.name, related_field.name)).unwrap();
+                        let display = stmt.query_row([&cell_value.to_string()], |r| {
+                            r.get(0)
+                        }).unwrap();
+
+                        CellData {
+                            display,
+                            value: cell_value,
+                        }
+                    }
+                };
 
                 // Technically should be using char len for accuracy with unicode, but that would
                 // be more expensive on long fields. This is only used for estimating column
@@ -237,8 +270,8 @@ impl App {
                 cells.clear();
 
                 for (i, _column_name) in columns.iter().enumerate() {
-                    let cell_data: CellData = row.get(i)?;
-                    cells.push(cell_data.display);
+                    let cell_value: CellValue = row.get(i)?;
+                    cells.push(cell_value.to_string());
                 }
                 writer.write_record(&cells)?;
             }
@@ -276,19 +309,40 @@ impl App {
 }
 
 #[derive(Clone)]
+pub enum CellValue {
+    StringValue(String),
+    IntValue(i64),
+    FloatValue(f64),
+    NullValue,
+    BlobValue(Vec<u8>),
+}
+
+#[derive(Clone)]
 pub struct CellData {
+    pub value: CellValue,
     pub display: String,
 }
 
-impl FromSql for CellData {
+impl Display for CellValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CellValue::StringValue(s) => {write!(f, "{}", s)},
+            CellValue::IntValue(i) => {write!(f, "{}", i)},
+            CellValue::FloatValue(v) => {write!(f, "{}", v)},
+            CellValue::NullValue => {write!(f, "<null>")}
+            CellValue::BlobValue(b) => {write!(f, "<{} bytes>", b.len())},
+        }
+    }
+}
+
+impl FromSql for CellValue {
     fn column_result(value: ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        let display = match value {
-            ValueRef::Null => "[null]".to_string(),
-            ValueRef::Integer(v) => format!("{}", v),
-            ValueRef::Real(v) => format!("{}", v),
-            ValueRef::Text(_) => value.as_str()?.to_string(),
-            ValueRef::Blob(v) => format!("[{} bytes]", v.len()),
-        };
-        Ok(CellData { display })
+        Ok(match value {
+            ValueRef::Null => CellValue::NullValue,
+            ValueRef::Integer(v) => CellValue::IntValue(v),
+            ValueRef::Real(v) => CellValue::FloatValue(v),
+            ValueRef::Text(_) => CellValue::StringValue(value.as_str()?.to_string()),
+            ValueRef::Blob(v) => CellValue::BlobValue(v.to_vec()),
+        })
     }
 }

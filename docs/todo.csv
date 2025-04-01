@@ -1,6 +1,6 @@
 status,type,milestone_id,title
-doing,imp,b1,Select/autocomplete for looking up related entities
-doing,refactor,b1,Non-string ids for columns and tables (and a central repository for looking them up)
+done,imp,b1,Select/autocomplete for looking up related entities
+done,refactor,b1,Non-string ids for columns and tables (and a central repository for looking them up)
 todo,imp,b1,null should show as grayed out and not actually save
 todo,feat,b1,allow rows to be deleted
 todo,imp,b2,allow cursor movement in text editing
