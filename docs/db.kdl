@@ -1,16 +1,16 @@
 schema {
     table "todo" label="Todos" file="todo.csv" {
         field "status" type="select" label="Status" {
-            option "todo" label="Todo"
-            option "doing" label="Doing"
-            option "done" label="Done"
+            option "todo" label="🔘 Todo"
+            option "doing" label="🔵 Doing"
+            option "done" label="✅ Done"
         }
         field "type" type="select" {
-            option "feat" label="Feature"
-            option "imp" label="Improvement"
-            option "bug" label="Bugfix"
-            option "refactor" label="Refactoring"
-            option "perf" label="Performance"
+            option "feat" label="❇️ Feature"
+            option "imp" label="✨ Improvement"
+            option "bug" label="🔧 Bugfix"
+            option "refactor" label="⚙️ Refactoring"
+            option "perf" label="📊 Performance"
         }
         field "milestone_id" label="Milestone" type="belongs_to" related_entity="milestone" related_key="id"
         field "title"
@@ -27,7 +27,7 @@ schema {
         field "datetime"
         field "duration"
     }
-//    
+//
 //    table "bigdata" file="bigdata.csv" {
 //        field "id"
 //        field "title"
