@@ -1,19 +1,23 @@
 status,type,milestone_id,title
-done,imp,b1,Select/autocomplete for looking up related entities
-done,refactor,b1,Non-string ids for columns and tables (and a central repository for looking them up)
-todo,imp,b1,null should show as grayed out and not actually save
-todo,feat,b1,allow rows to be deleted
-todo,imp,b2,allow cursor movement in text editing
+todo,feat,b1,Allow rows to be deleted
+todo,bug,b1,Crashes when related entity doesn't exist
+todo,feat,b2,"Add concept of a ""view"" in which filters and grouping will be configured"
 todo,refactor,b2,refactor all SQL queries to db module
-todo,imp,b2,Use config labels for sheet and column headings
 todo,feat,b2,Group by in sheet view
 todo,feat,b2,Filter columns
+todo,feat,b2,Boolean types
 todo,feat,b2,Sort columns
+todo,imp,b3,allow cursor movement in text editing
 todo,feat,idea,Board view (kanban style)
 todo,perf,idea,Optimise ingestion by batching inserts
 todo,feat,idea,"Selecting, cutting, pasting rows"
 todo,feat,idea,Undo/redo
+todo,feat,idea,Display validation errors
 todo,feat,idea,"Different views configured in KDL (grouping, sorting, filtered views)"
+done,imp,b1,Use config labels for sheet and column headings
+done,imp,b1,Select/autocomplete for looking up related entities
+done,refactor,b1,Non-string ids for columns and tables (and a central repository for looking them up)
+done,imp,b1,null should show as grayed out and not actually save
 done,refactor,b1,Move actions into own module
 done,refactor,b1,Move event handling into own module
 done,bug,b1,Crashes when pressing tab after finish editing
