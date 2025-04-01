@@ -14,6 +14,7 @@ use ratatui::{DefaultTerminal};
 use ratatui::crossterm::event;
 use ratatui::prelude::*;
 use ratatui::widgets::{Clear, Paragraph};
+use clap::Parser;
 use crate::db::ingest_csv_table;
 use crate::dbconfig::Config;
 use crate::model::{App, Mode};
@@ -22,15 +23,39 @@ use crate::util::Vector2i;
 use crate::view::sheet_view;
 use crate::view::widgets::autocomplete::Autocomplete;
 
-fn main() -> Result<()> {
-    // match std::fs::remove_file("test.sqlite") {
-    //     Ok(_) => println!("Removed test file"),
-    //     Err(e) => println!("{:?}", e),
-    // }
-    // let mut conn = Connection::open("test.sqlite")?;
-    let mut conn = Connection::open_in_memory()?;
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    #[clap(long)]
+    config: Option<PathBuf>,
+    
+    #[clap(long)]
+    debug: bool,
 
-    let path_to_config = PathBuf::from("../docs/db.kdl");
+    #[clap(long)]
+    diskcache: bool,
+}
+
+fn main() -> Result<()> {
+
+    let cli = Cli::parse();
+    
+    let mut conn = match cli.diskcache {
+        false => Connection::open_in_memory()?,
+        true => {
+            match std::fs::remove_file("data.sqlite") {
+                Ok(_) => println!("Removed existing data cache"),
+                Err(e) => {},
+            };
+            Connection::open("data.sqlite")?
+        }
+    };
+
+    let path_to_config = cli.config.unwrap_or_else(|| PathBuf::from("db.kdl"));
+    if !path_to_config.exists() {
+        return Err(eyre::eyre!("Config file {} not found", path_to_config.display()));
+    }
+    
     let config_content = read_to_string(&path_to_config)?;
     let config = Config::parse_from_str(&config_content, &path_to_config)?;
 
@@ -48,7 +73,8 @@ fn main() -> Result<()> {
     let area = terminal.get_frame().area();
     let initial_size = Vector2i::new(area.width as i32, area.height as i32);
 
-    let app = App::new(conn, schema, initial_size);
+    let mut app = App::new(conn, schema, initial_size);
+    app.show_debug = cli.debug;
 
     let result = run(terminal, app);
     ratatui::restore();
@@ -57,17 +83,21 @@ fn main() -> Result<()> {
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
+        let debug = self.show_debug;
+        
         let layout = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![
                 Constraint::Ratio(1, 1),
-                Constraint::Min(80),
+                Constraint::Min(if debug { 80 } else { 0 }),
             ]).split(area);
 
         sheet_view(&self, layout[0], buf);
 
-        let debug = Paragraph::new(self.debug_text.clone()).style(self.color_scheme.debug_panel);
-        debug.render(layout[1], buf);
+        if debug {
+            let debug = Paragraph::new(self.debug_text.clone()).style(self.color_scheme.debug_panel);
+            debug.render(layout[1], buf);
+        }
 
         if let Mode::EditBelongsTo { search, selected_index, results } = &self.mode {
             let items = results.iter().map(|r| format!("{} {}", r.key, r.label)).collect();

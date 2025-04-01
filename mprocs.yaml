@@ -4,14 +4,21 @@ procs:
   git:
     shell: "gitui"
   test:
+    autostart: false
     cwd: "flatlite-cli"
     shell: "cargo test"
   snapshot-review:
+    autostart: false
     cwd: "flatlite-cli"
     shell: "cargo insta review"
   flatlite-cli:
+    autostart: false
     cwd: "flatlite-cli"
-    shell: "RUST_BACKTRACE=1 cargo run --bin flatlite-cli"
+    shell: "RUST_BACKTRACE=1 cargo run --bin flatlite-cli -- --config=../docs/db.kdl"
+  flatlite-cli-debug:
+    autostart: false
+    cwd: "flatlite-cli"
+    shell: "RUST_BACKTRACE=1 cargo run --bin flatlite-cli -- --config=../docs/db.kdl --diskcache --debug"
   generate-bigdata:
     autostart: false
     cwd: "flatlite-cli"

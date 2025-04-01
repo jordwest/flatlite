@@ -7,6 +7,7 @@ pub enum Action {
     MoveCursor(Vector2i),
     Scroll(i32),
     Page(i32),
+    DeleteRow,
     AddRow,
     NextCell,
     FinishEdit,
@@ -63,6 +64,7 @@ impl App {
                 self.populate_sheet(self.current_sheet);
             },
             Action::NextCell => {
+                self.debug_text = format!("{}\n Next cell", self.debug_text);
                 let sheet = self.active_sheet_mut().unwrap();
                 let bounds = Vector2i::new(sheet.columns.len() as i32, sheet.total_count as i32);
 
@@ -119,23 +121,28 @@ impl App {
                 }
             }
             Action::AddRow => {
-                {
+                let y = {
                     let sheet = self.active_sheet().unwrap();
                     let table = self.schema.table(sheet.table_id);
                     let cursor = sheet.view_cursor();
-                    let row = &sheet.rows[cursor.row()];
-                    let new_row_id = row.rowid + 1;
 
-                    self.conn.execute(&format!("UPDATE {} SET __order = __order + 1 WHERE __order >= ?", table.name), [new_row_id]).unwrap();
-                    self.conn.execute(&format!("INSERT INTO {} (__order) VALUES (?)", table.name), [new_row_id]).unwrap();
-                }
+                    let new_order = match cursor.row() {
+                        x if x < sheet.rows.len() => x + 1,
+                        _ => sheet.rows.len(),
+                    };
+
+                    self.conn.execute(&format!("UPDATE {} SET __order = __order + 1 WHERE __order >= ?", table.name), [new_order]).unwrap();
+                    self.conn.execute(&format!("INSERT INTO {} (__order) VALUES (?)", table.name), [new_order]).unwrap();
+                    new_order
+                };
 
                 let sheet = self.active_sheet_mut().unwrap();
-                sheet.selected_cell = sheet.selected_cell + Vector2i::new(0, 1);
+                sheet.selected_cell = Vector2i::new(sheet.selected_cell.x, y as i32);
                 self.populate_sheet(self.current_sheet);
             }
 
             Action::FinishEdit => {
+                self.debug_text = format!("{}\n Finish edit", self.debug_text);
                 let sheet = self.active_sheet().unwrap();
                 let cursor = sheet.view_cursor();
 
@@ -155,8 +162,8 @@ impl App {
                 };
 
                 match update_value {
-                    None => self.push_action(Action::SetMode(Mode::Normal)),
-                    Some(new_value) => self.push_action(Action::SaveCell { value: new_value }),
+                    None => self.push_action_front(Action::SetMode(Mode::Normal)),
+                    Some(new_value) => self.push_action_front(Action::SaveCell { value: new_value }),
                 }
             }
             Action::SaveCell { value } => {
@@ -168,7 +175,7 @@ impl App {
                 {
                     let mut stmt = self.conn.prepare(
                         &format!(
-                            "UPDATE {} SET {} = ? WHERE __order = ?",
+                            "UPDATE {} SET {} = ? WHERE rowid = ?",
                             table.name,
                             selected_field_name,
                         )).unwrap();
@@ -181,7 +188,34 @@ impl App {
                 self.save_entity(self.current_sheet).unwrap();
             },
             Action::CancelEdit => self.mode = Mode::Normal,
-            Action::SetMode(mode) => self.mode = mode
+            Action::SetMode(mode) => self.mode = mode,
+            Action::DeleteRow => {
+                let sheet = self.active_sheet().unwrap();
+                let table = self.schema.table(sheet.table_id);
+                let cursor = sheet.view_cursor();
+
+                let (rowid, order) = match cursor.row() {
+                    x if x >= sheet.rows.len() => { return },
+                    x => (sheet.rows[x].rowid, sheet.rows[x].order),
+                };
+
+                let last_row = cursor.row() == sheet.rows.len() - 1 && sheet.rows.len() > 0;
+                self.debug_text = format!("Deleting rowid {} cursor {},{}", rowid, cursor.x, cursor.y);
+
+                {
+                    let mut stmt = self.conn.prepare(
+                        &format!("DELETE FROM {} WHERE rowid = ?", table.name)
+                    ).unwrap();
+
+                    stmt.execute([&rowid]).unwrap();
+                }
+
+                if last_row {
+                    self.push_action(Action::MoveCursor(Vector2i::new(0, -1)));
+                };
+                self.populate_sheet(self.current_sheet);
+                self.save_entity(self.current_sheet).unwrap();
+            }
         }
     }
 

@@ -65,6 +65,7 @@ impl App {
                             KeyCode::PageDown => self.push_action(Action::Page(1)),
                             KeyCode::Tab => self.push_action(Action::NextCell),
                             KeyCode::Char('a') => self.push_action(Action::AddRow),
+                            KeyCode::Char('d') => self.push_action(Action::DeleteRow),
                             KeyCode::Char('h') => self.push_action(Action::MoveCursor(Vector2i::new(-1, 0))),
                             KeyCode::Char('j') => self.push_action(Action::MoveCursor(Vector2i::new(0, 1))),
                             KeyCode::Char('k') => self.push_action(Action::MoveCursor(Vector2i::new(0, -1))),
@@ -87,6 +88,6 @@ impl App {
 
         self.process_actions();
 
-        self.debug_text = format!("{:#?} \n\n {:#?}", self.mode, self.schema);
+        // self.debug_text = format!("{:#?} \n\n {:#?}", self.mode, self.schema);
     }
 }

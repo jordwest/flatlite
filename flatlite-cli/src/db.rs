@@ -19,17 +19,17 @@ pub fn ingest_csv_table(conn: &mut Connection, schema: &mut Schema, table_id: Ta
 
     conn.execute(&format!("CREATE INDEX {}_order_idx ON {} (__order)", table.name, table.name), [])?;
 
-    let mut rowid = 0;
+    let mut order = 0;
 
     for row_result in rdr.records() {
         let row = row_result.wrap_err("Failed to read row")?;
 
         let placeholders = row.iter().map(|_| "?").collect::<Vec<_>>().join(",");
 
-        let sql = format!("INSERT INTO {} (__order, {}) VALUES ({}, {})", table.name, column_query, rowid, placeholders);
+        let sql = format!("INSERT INTO {} (__order, {}) VALUES ({}, {})", table.name, column_query, order, placeholders);
 
         conn.execute(&sql, params_from_iter(row.iter())).wrap_err("Failed to INSERT row")?;
-        rowid += 1;
+        order += 1;
     }
 
     Ok(())

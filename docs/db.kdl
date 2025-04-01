@@ -27,14 +27,19 @@ schema {
         field "datetime"
         field "duration"
     }
-    
-    table "bigdata" file="bigdata.csv" {
+//    
+//    table "bigdata" file="bigdata.csv" {
+//        field "id"
+//        field "title"
+//        field "extra" type="select" {
+//            option "one" label="Option one"
+//            option "two" label="Option two"
+//            option "shoe" label="Option shoe"
+//        }
+//    }
+
+    table "empty" file="empty.csv" {
         field "id"
         field "title"
-        field "extra" type="select" {
-            option "one" label="Option one"
-            option "two" label="Option two"
-            option "shoe" label="Option shoe"
-        }
     }
 }

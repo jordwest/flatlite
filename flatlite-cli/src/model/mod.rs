@@ -18,6 +18,7 @@ use crate::util::Vector2i;
 
 pub struct SheetRow {
     pub rowid: i64,
+    pub order: i64,
     pub cells: Vec<CellData>,
 }
 
@@ -133,7 +134,7 @@ impl App {
             r.get(0)
         }).unwrap();
 
-        let mut stmt = self.conn.prepare(&format!("SELECT * from {} ORDER BY __order LIMIT ? OFFSET ?", table.name)).unwrap();
+        let mut stmt = self.conn.prepare(&format!("SELECT rowid, * from {} ORDER BY __order LIMIT ? OFFSET ?", table.name)).unwrap();
         let mut rows = stmt.query([limit, offset]).unwrap();
 
         let columns = self.schema.fields_for_table(table_id);
@@ -150,11 +151,12 @@ impl App {
         while let Some(row) = rows.next().unwrap() {
             let mut sheet_row = SheetRow {
                 rowid: row.get(0).unwrap(),
+                order: row.get(1).unwrap(),
                 cells: Vec::with_capacity(columns.len()),
             };
 
             for (i, column) in columns.iter().enumerate() {
-                let cell_value: CellValue = row.get(i + 1).unwrap();
+                let cell_value: CellValue = row.get(i + 2).unwrap();
 
                 let cell_data = match column.field_type {
                     FieldType::StringField => { CellData {
@@ -176,9 +178,13 @@ impl App {
                         let related_field = self.schema.field(related_key_id);
 
                         let mut stmt = self.conn.prepare(&format!("SELECT title FROM {} WHERE {} = ?", related_table.name, related_field.name)).unwrap();
-                        let display = stmt.query_row([&cell_value.to_string()], |r| {
+                        let result = stmt.query_row([&cell_value.to_string()], |r| {
                             r.get(0)
-                        }).unwrap();
+                        });
+                        let display = match result {
+                            Ok(str) => str,
+                            Err(_) => cell_value.to_string(),
+                        };
 
                         CellData {
                             display,
@@ -287,6 +293,10 @@ impl App {
 
     pub fn push_action(&mut self, action: Action) {
         self.command_buffer.push_back(action);
+    }
+
+    pub fn push_action_front(&mut self, action: Action) {
+        self.command_buffer.push_front(action)
     }
 
     pub fn process_actions(&mut self) {
