@@ -34,8 +34,8 @@ impl <'a> Widget for TabBar<'a> {
                 buf.set_string(area.x + x, area.y, " ", Style::default());
                 x += 1;
             }
-            buf.set_string(area.x + x, area.y, tab, Style::from(style));
-            x += size;
+            let (end_x, _) = buf.set_stringn(area.x + x, area.y, tab, (area.width - x) as usize, Style::from(style));
+            x = end_x;
             i += 1;
         }
     }

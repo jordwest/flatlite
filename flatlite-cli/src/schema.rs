@@ -11,6 +11,7 @@ pub struct FieldId(pub usize);
 pub struct TableSchema {
     pub id: TableId,
     pub name: String,
+    pub label: Option<String>,
     pub source_file: PathBuf,
     pub fields: Vec<FieldId>,
 }
@@ -67,7 +68,7 @@ impl Schema {
     pub fn field_by_name(&self, table_id: TableId, name: &str) -> Option<&FieldSchema> {
         self.fields.iter().find(|t| t.name == name && t.table_id == table_id)
     }
-    
+
     /// Convert a list of field IDs to column names to be used in a SQL query
     pub fn field_query(&self, field_ids: &Vec<FieldId>) -> String {
         let mut fields = Vec::with_capacity(field_ids.len());
@@ -82,7 +83,13 @@ impl TryFrom<&Config> for Schema {
     type Error = eyre::Error;
 
     fn try_from(config: &Config) -> Result<Self, Self::Error> {
-        let mut tables: Vec<TableSchema> = config.tables.iter().map(|t| TableSchema { id: t.id, name: t.name.to_string(), fields: Vec::new(), source_file: t.source_file.clone() }).collect();
+        let mut tables: Vec<TableSchema> = config.tables.iter().map(|t| TableSchema {
+            id: t.id,
+            name: t.name.to_string(),
+            label: t.label.clone(),
+            fields: Vec::new(),
+            source_file: t.source_file.clone()
+        }).collect();
         let mut fields: Vec<FieldSchema> = Vec::with_capacity(config.fields.len());
         
         for field in &config.fields {

@@ -7,6 +7,7 @@ use crate::schema::{FieldId, SelectOption, TableId};
 pub struct ConfigTable {
     pub id: TableId,
     pub name: String,
+    pub label: Option<String>,
     pub source_file: PathBuf,
 }
 
@@ -46,11 +47,12 @@ impl ExtractValue for KdlNode {
 }
 
 impl Config {
-    pub fn add_table(&mut self, name: String, source_file: PathBuf) -> TableId {
+    pub fn add_table(&mut self, name: String, label: Option<String>, source_file: PathBuf) -> TableId {
         let id = TableId(self.tables.len());
         self.tables.push(ConfigTable {
             id,
             name,
+            label,
             source_file,
         });
         id
@@ -82,8 +84,8 @@ impl Config {
                         let mut path = state.config_source.clone();
                         path.pop();
                         path.push(schema_child.required("file")?);
-                        
-                        let table_id = state.add_table(schema_child.required_name()?, path);
+
+                        let table_id = state.add_table(schema_child.required_name()?, schema_child.optional("label")?, path);
 
                         for table_child in schema_child.iter_children() {
                             if table_child.name().repr() == Some("field") {

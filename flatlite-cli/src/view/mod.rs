@@ -104,7 +104,10 @@ pub fn sheet_view(app: &App, area: Rect, buf: &mut Buffer) {
     statusbar_view(app, layout[1], buf);
 
     let tab = TabBar {
-        tabs: app.schema.tables.iter().map(|e| (e.id, e.name.to_string())).collect(),
+        tabs: app.schema.tables.iter().map(|e| (
+            e.id,
+            e.label.clone().unwrap_or_else(|| e.name.clone())),
+        ).collect(),
         color_scheme: &app.color_scheme,
         selected_id: app.current_sheet,
     };
