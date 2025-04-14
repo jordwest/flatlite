@@ -13,6 +13,8 @@ pub struct TableSchema {
     pub name: String,
     pub label: Option<String>,
     pub source_file: PathBuf,
+    pub id_field: Option<FieldId>,
+    pub title_field: Option<FieldId>,
     pub fields: Vec<FieldId>,
 }
 
@@ -87,6 +89,8 @@ impl TryFrom<&Config> for Schema {
             id: t.id,
             name: t.name.to_string(),
             label: t.label.clone(),
+            id_field: None,
+            title_field: None,
             fields: Vec::new(),
             source_file: t.source_file.clone()
         }).collect();
@@ -117,7 +121,15 @@ impl TryFrom<&Config> for Schema {
             fields.push(field_schema);
             for t in &mut tables {
                 if t.id == field.table_id {
-                    t.fields.push(field.id)
+                    t.fields.push(field.id);
+
+                    // TODO: Get this from the schema file instead of hardcoding
+                    if field.name == "id" {
+                        t.id_field = Some(field.id);
+                    }
+                    if field.name == "title" {
+                        t.title_field = Some(field.id);
+                    }
                 }
             };
         }

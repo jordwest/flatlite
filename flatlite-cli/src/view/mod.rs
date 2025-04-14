@@ -8,8 +8,27 @@ use crate::model::{App, CellValue, Mode};
 use crate::view::widgets::TabBar;
 
 pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
-    // let entity = app.current_entity();
     let sheet = app.active_sheet().unwrap();
+
+    let group_tabs_size = match sheet.group_by_field {
+        Some(_) => 1,
+        None => 0,
+    };
+    let layout = Layout::new(Direction::Vertical, vec![
+        Constraint::Min(group_tabs_size),
+        Constraint::Ratio(1, 1),
+    ]).split(area);
+
+    // Tab bar
+    let tb = TabBar {
+        tabs: sheet.group_tabs.iter().enumerate().map(|(id, s)| (id, s.to_string()) ).collect(),
+        color_scheme: &app.color_scheme,
+        selected_id: sheet.group_selected,
+    };
+
+    tb.render(layout[0], buf);
+    
+    let sheet_area = layout[1];
 
     let last_col_idx = sheet.columns.len() - 1;
     let column_constraints: Vec<Constraint> = sheet.columns
@@ -22,13 +41,13 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
             }
         })
         .collect();
-    let column_layout = Layout::new(Direction::Horizontal, column_constraints).split(area);
+    let column_layout = Layout::new(Direction::Horizontal, column_constraints).split(sheet_area);
 
     let view_cursor = sheet.view_cursor();
 
     for (i, col) in sheet.columns.iter().enumerate() {
         let col_area = column_layout[i];
-        let heading_cell_area = Rect::new(col_area.x, 0, col_area.width, 1);
+        let heading_cell_area = Rect::new(col_area.x, sheet_area.y, col_area.width, 1);
         let field = app.schema.field(col.field_id);
         buf.set_string(col_area.x, col_area.y, &field.name, app.color_scheme.sheet_heading_inactive);
 
@@ -36,13 +55,13 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
         buf.set_style(heading_cell_area, style)
     }
 
-    let mut y = 1;
+    let mut y = sheet_area.y + 1;
     let mut row_idx = 0;
 
     for row in &sheet.rows {
         for (i, col_area) in column_layout.iter().enumerate() {
 
-            if y > area.height {
+            if y > sheet_area.height {
                 return;
             }
 

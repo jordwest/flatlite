@@ -11,6 +11,7 @@ use rusqlite::types::{FromSql, ValueRef};
 use eyre::{Context, Result};
 use rusqlite::fallible_iterator::FallibleIterator;
 use crate::color_scheme::ColorScheme;
+use crate::db;
 use crate::model::actions::Action;
 use crate::model::text::TextInput;
 use crate::schema::{FieldId, FieldType, Schema, SelectOption, TableId, TableSchema};
@@ -38,6 +39,10 @@ pub struct SheetCache {
     pub columns: Vec<SheetColumn>,
     /// Virtual rows of loaded data
     pub rows: Vec<SheetRow>,
+    /// Group by enabled on field
+    pub group_by_field: Option<FieldId>,
+    pub group_tabs: Vec<String>,
+    pub group_selected: usize,
 }
 
 impl SheetCache {
@@ -124,18 +129,50 @@ impl App {
         let limit = (self.available_size.y - 3) as usize;
 
         let existing_cache = self.sheets_cache.get(&table_id);
-        let (selected_cell, offset) = match existing_cache {
-            Some(c) => (c.selected_cell, c.start_offset),
-            None => (Vector2i::new(0, 0), 0),
+        let (selected_cell, offset, group_by_field, group_selected) = match existing_cache {
+            Some(c) => (c.selected_cell, c.start_offset, c.group_by_field, c.group_selected),
+            None => (Vector2i::new(0, 0), 0, None, 0),
         };
 
-        let mut count_stmt = self.conn.prepare(&format!("SELECT COUNT(rowid) from {}", table.name)).unwrap();
-        let count: i64 = count_stmt.query_row([], |r| {
-            r.get(0)
-        }).unwrap();
+        let count = db::count_rows(&mut self.conn, &table.name).unwrap();
 
-        let mut stmt = self.conn.prepare(&format!("SELECT rowid, * from {} ORDER BY __order LIMIT ? OFFSET ?", table.name)).unwrap();
-        let mut rows = stmt.query([limit, offset]).unwrap();
+        let group_tabs = match group_by_field {
+            Some(field_id) => {
+                let field = self.schema.field(field_id);
+                db::groups(&mut self.conn, &table.name, &field.name).unwrap()
+            },
+            None => Vec::new(),
+        };
+
+        let current_group = match (group_by_field) {
+            Some(id) => {
+                let field = self.schema.field(id);
+                Some(db::groups(&mut self.conn, &table.name, &field.name).unwrap()[group_selected].clone())
+            },
+            None => None,
+        };
+
+        let mut stmt = match group_by_field {
+            Some(fid) => {
+                let group_field = self.schema.field(fid);
+                self.conn.prepare(&format!("SELECT rowid, * from {} WHERE {} = ? ORDER BY __order LIMIT ? OFFSET ?", table.name, group_field.name)).unwrap()
+            },
+            _ => {
+                self.conn.prepare(&format!("SELECT rowid, * from {} ORDER BY __order LIMIT ? OFFSET ?", table.name)).unwrap()
+            }
+        };
+
+        let mut rows = match current_group {
+            Some(group_field_value, ) => {
+                stmt.query((group_field_value, limit, offset)).unwrap()
+            },
+            None => {
+                stmt.query([limit, offset]).unwrap()
+            }
+        };
+        //
+        // let mut stmt = self.conn.prepare(&format!("SELECT rowid, * from {} ORDER BY __order LIMIT ? OFFSET ?", table.name)).unwrap();
+        // let mut rows = stmt.query([limit, offset]).unwrap();
 
         let columns = self.schema.fields_for_table(table_id);
 
@@ -143,9 +180,12 @@ impl App {
             selected_cell,
             start_offset: offset,
             rows: Vec::new(),
+            group_by_field,
             total_count: count as usize,
             columns: columns.iter().map(|s| SheetColumn { field_id: s.id, width: (s.name.len() + 2) as u16 }).collect(),
             table_id,
+            group_tabs,
+            group_selected,
         };
 
         while let Some(row) = rows.next().unwrap() {

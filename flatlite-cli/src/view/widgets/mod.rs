@@ -4,15 +4,14 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::prelude::{Style, Widget};
 use crate::color_scheme::ColorScheme;
-use crate::schema::TableId;
 
-pub struct TabBar<'a> {
-    pub tabs: Vec<(TableId, String)>,
-    pub selected_id: TableId,
+pub struct TabBar<'a, Id: Eq + PartialEq> {
+    pub tabs: Vec<(Id, String)>,
+    pub selected_id: Id,
     pub color_scheme: &'a ColorScheme,
 }
 
-impl <'a> Widget for TabBar<'a> {
+impl <'a, Id: Eq + PartialEq> Widget for TabBar<'a, Id> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let mut x: u16 = 0;
 

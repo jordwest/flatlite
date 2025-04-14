@@ -1,7 +1,7 @@
 status,type,milestone_id,title
 todo,feat,b2,"Add concept of a ""perspective"" in which filters and grouping will be configured"
 doing,refactor,b2,refactor all SQL queries to db module
-next,feat,b2,Group by in sheet view
+polishing,feat,b2,Group by in sheet view
 todo,feat,b2,"Don't hardcode ""title"" field for record display name"
 todo,feat,b2,Filter columns
 todo,feat,b2,Boolean types

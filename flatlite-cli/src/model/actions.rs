@@ -15,6 +15,9 @@ pub enum Action {
     AutocompleteNext,
     AutocompletePrev,
     RefreshView,
+    SetGroupBy,
+    NextGroup,
+    PrevGroup,
     SetMode(Mode),
     EditCell { clear: bool },
     SaveCell { value: String },
@@ -35,6 +38,35 @@ impl App {
                     Mode::EditBelongsTo { .. } => self.refresh_related_autocomplete(),
                 }
             }
+            Action::SetGroupBy => {
+                let sheet = self.active_sheet_mut().unwrap();
+                let field = sheet.columns[sheet.selected_cell.col()].field_id;
+                if sheet.group_by_field == Some(field) {
+                    sheet.group_by_field = None;
+                } else {
+                    sheet.group_by_field = Some(field);
+                }
+                sheet.group_selected = 0;
+                self.populate_sheet(self.current_sheet);
+            },
+            Action::NextGroup => {
+                let sheet = self.active_sheet_mut().unwrap();
+                if sheet.group_selected >= sheet.group_tabs.len() - 1 {
+                    sheet.group_selected = 0;
+                } else {
+                    sheet.group_selected += 1;
+                }
+                self.populate_sheet(self.current_sheet);
+            },
+            Action::PrevGroup => {
+                let sheet = self.active_sheet_mut().unwrap();
+                if sheet.group_selected == 0 {
+                    sheet.group_selected = sheet.group_tabs.len() - 1;
+                } else {
+                    sheet.group_selected -= 1;
+                }
+                self.populate_sheet(self.current_sheet);
+            },
             Action::Page(amount) => {
                 let sheet = self.active_sheet().unwrap();
                 self.process_action(Action::MoveCursor(Vector2i::new(0, amount * (sheet.rows.len() as i32))));

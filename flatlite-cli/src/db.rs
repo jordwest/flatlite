@@ -2,7 +2,7 @@ use std::fs::File;
 use std::path::Path;
 use eyre::Context;
 use rusqlite::{params_from_iter, Connection};
-use crate::schema::{FieldSchema, Schema, TableId};
+use crate::schema::{FieldId, FieldSchema, Schema, TableId};
 
 pub fn ingest_csv_table(conn: &mut Connection, schema: &mut Schema, table_id: TableId, source_file: &Path) -> eyre::Result<()> {
     let file = File::open(source_file).wrap_err("Failed to open file")?;
@@ -33,4 +33,22 @@ pub fn ingest_csv_table(conn: &mut Connection, schema: &mut Schema, table_id: Ta
     }
 
     Ok(())
+}
+
+pub fn count_rows(conn: &mut Connection, table_name: &str) -> eyre::Result<i64> {
+    let mut count_stmt = conn.prepare(&format!("SELECT COUNT(rowid) from {}", table_name))?;
+    Ok(count_stmt.query_row([], |r| {
+        r.get(0)
+    })?)
+}
+
+pub fn groups(conn: &mut Connection, table_name: &str, field_name: &str) -> eyre::Result<Vec<String>> {
+    let mut stmt = conn.prepare(&format!("SELECT {} FROM {} GROUP BY {}", field_name, table_name, field_name))?;
+    let mut v: Vec<String> = Vec::new();
+    
+    for row in stmt.query_map([], |row| row.get(0))? {
+        v.push(row?);
+    }
+
+    Ok(v)
 }
