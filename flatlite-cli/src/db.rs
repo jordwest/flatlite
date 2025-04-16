@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::path::Path;
 use eyre::Context;
-use rusqlite::{params_from_iter, Connection};
+use rusqlite::{params_from_iter, Connection, Params};
 use crate::schema::{FieldId, FieldSchema, Schema, TableId};
 
 pub fn ingest_csv_table(conn: &mut Connection, schema: &mut Schema, table_id: TableId, source_file: &Path) -> eyre::Result<()> {
@@ -35,9 +35,9 @@ pub fn ingest_csv_table(conn: &mut Connection, schema: &mut Schema, table_id: Ta
     Ok(())
 }
 
-pub fn count_rows(conn: &mut Connection, table_name: &str) -> eyre::Result<i64> {
-    let mut count_stmt = conn.prepare(&format!("SELECT COUNT(rowid) from {}", table_name))?;
-    Ok(count_stmt.query_row([], |r| {
+pub fn count_rows<P:Params>(conn: &mut Connection, table_name: &str, where_clause: &str, where_params: P) -> eyre::Result<i64> {
+    let mut count_stmt = conn.prepare(&format!("SELECT COUNT(rowid) from {} {}", table_name, where_clause))?;
+    Ok(count_stmt.query_row(where_params, |r| {
         r.get(0)
     })?)
 }

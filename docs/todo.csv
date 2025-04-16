@@ -6,6 +6,7 @@ todo,feat,b2,"Don't hardcode ""title"" field for record display name"
 todo,feat,b2,Filter columns
 todo,feat,b2,Boolean types
 todo,feat,b2,Sort columns
+todo,bug,b2,Crashes when adding a new row in grouped mode
 todo,imp,b3,allow cursor movement in text editing
 todo,imp,b3,Show selected record in belongs_to autocomplete
 todo,imp,b3,Autocomplete popup for select fields

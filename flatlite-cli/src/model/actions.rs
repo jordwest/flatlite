@@ -48,24 +48,32 @@ impl App {
                 }
                 sheet.group_selected = 0;
                 self.populate_sheet(self.current_sheet);
+                // Ensure cursor is within bounds
+                self.push_action(Action::MoveCursor(Vector2i::new(0, 0)));
             },
             Action::NextGroup => {
                 let sheet = self.active_sheet_mut().unwrap();
-                if sheet.group_selected >= sheet.group_tabs.len() - 1 {
+                if sheet.group_tabs.len() == 0 || sheet.group_selected >= sheet.group_tabs.len() - 1 {
                     sheet.group_selected = 0;
                 } else {
                     sheet.group_selected += 1;
                 }
                 self.populate_sheet(self.current_sheet);
+                // Ensure cursor is within bounds
+                self.push_action(Action::MoveCursor(Vector2i::new(0, 0)));
             },
             Action::PrevGroup => {
                 let sheet = self.active_sheet_mut().unwrap();
-                if sheet.group_selected == 0 {
+                if sheet.group_tabs.len() == 0 {
+                    sheet.group_selected = 0;
+                } else if sheet.group_selected == 0 {
                     sheet.group_selected = sheet.group_tabs.len() - 1;
                 } else {
                     sheet.group_selected -= 1;
                 }
                 self.populate_sheet(self.current_sheet);
+                // Ensure cursor is within bounds
+                self.push_action(Action::MoveCursor(Vector2i::new(0, 0)));
             },
             Action::Page(amount) => {
                 let sheet = self.active_sheet().unwrap();

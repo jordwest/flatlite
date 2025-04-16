@@ -134,8 +134,6 @@ impl App {
             None => (Vector2i::new(0, 0), 0, None, 0),
         };
 
-        let count = db::count_rows(&mut self.conn, &table.name).unwrap();
-
         let group_tabs = match group_by_field {
             Some(field_id) => {
                 let field = self.schema.field(field_id);
@@ -152,15 +150,22 @@ impl App {
             None => None,
         };
 
-        let mut stmt = match group_by_field {
+        let where_clause = match group_by_field {
             Some(fid) => {
                 let group_field = self.schema.field(fid);
-                self.conn.prepare(&format!("SELECT rowid, * from {} WHERE {} = ? ORDER BY __order LIMIT ? OFFSET ?", table.name, group_field.name)).unwrap()
+                format!("WHERE {} = ?", group_field.name)
             },
-            _ => {
-                self.conn.prepare(&format!("SELECT rowid, * from {} ORDER BY __order LIMIT ? OFFSET ?", table.name)).unwrap()
-            }
+            None => "".to_string(),
         };
+
+        let count = match current_group {
+            Some(ref v) => {
+                db::count_rows(&mut self.conn, &table.name, &where_clause, [v.clone()])
+            },
+            None => db::count_rows(&mut self.conn, &table.name, "", [])
+        }.unwrap();
+
+        let mut stmt = self.conn.prepare(&format!("SELECT rowid, * from {} {} ORDER BY __order LIMIT ? OFFSET ?", table.name, where_clause)).unwrap();
 
         let mut rows = match current_group {
             Some(group_field_value, ) => {
