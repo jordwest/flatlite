@@ -40,9 +40,9 @@ schema {
 //            option "shoe" label="Option shoe"
 //        }
 //    }
-
-    table "empty" file="empty.csv" {
-        field "id"
-        field "title"
-    }
+//
+//    table "empty" file="empty.csv" {
+//        field "id"
+//        field "title"
+//    }
 }

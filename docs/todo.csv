@@ -1,12 +1,14 @@
 status,type,milestone_id,title
-todo,feat,b2,"Add concept of a ""perspective"" in which filters and grouping will be configured"
+todo,feat,b3,"Add concept of a ""perspective"" in which filters and grouping will be configured"
 doing,refactor,b2,refactor all SQL queries to db module
-polishing,feat,b2,Group by in sheet view
+done,feat,b2,Group by in sheet view
 todo,feat,b2,"Don't hardcode ""title"" field for record display name"
-todo,feat,b2,Filter columns
-todo,feat,b2,Boolean types
-todo,feat,b2,Sort columns
+todo,feat,b3,Filter columns
+todo,feat,b3,Boolean types
+todo,feat,b3,Sort columns
 todo,bug,b2,Crashes when adding a new row in grouped mode
+todo,imp,b2,Use related record title for group headings (or option label if select)
+todo,feat,b2,Basic search (sqlite LIKE is fine)
 todo,imp,b3,allow cursor movement in text editing
 todo,imp,b3,Show selected record in belongs_to autocomplete
 todo,imp,b3,Autocomplete popup for select fields
@@ -16,7 +18,7 @@ todo,feat,idea,Board view (kanban style)
 todo,feat,idea,Datetime fields
 todo,perf,idea,Optimise ingestion by batching inserts
 todo,feat,idea,"Selecting, cutting, pasting rows"
-todo,feat,idea,Undo/redo
+todo,feat,b3,Undo/redo
 todo,feat,idea,Display validation errors
 todo,feat,idea,"Different views configured in KDL (grouping, sorting, filtered views)"
 todo,feat,idea,Load multiple databases (with relations between them)
