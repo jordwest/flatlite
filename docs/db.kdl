@@ -4,7 +4,7 @@ schema {
             option "todo" label="⚪️ Todo"
             option "next" label="🔘 Next"
             option "doing" label="🔵 Doing"
-            option "incomplete" label="⚪️ Incomplete"
+            option "incomplete" label="🟤 Incomplete"
             option "polishing" label="🔵 Polishing"
             option "done" label="✅ Done"
         }

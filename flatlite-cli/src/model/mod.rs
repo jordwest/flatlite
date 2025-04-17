@@ -9,9 +9,9 @@ use std::fs::File;
 use rusqlite::Connection;
 use rusqlite::types::{FromSql, ValueRef};
 use eyre::{Context, Result};
-use rusqlite::fallible_iterator::FallibleIterator;
 use crate::color_scheme::ColorScheme;
 use crate::db;
+use crate::db::{rusqlite_value_to_string, QueryBuilder, WhereBuilder};
 use crate::model::actions::Action;
 use crate::model::text::TextInput;
 use crate::schema::{FieldId, FieldType, Schema, SelectOption, TableId, TableSchema};
@@ -28,6 +28,11 @@ pub struct SheetColumn {
     pub field_id: FieldId,
 }
 
+pub struct GroupTab {
+    pub value: rusqlite::types::Value,
+    pub label: String,
+}
+
 pub struct SheetCache {
     /// Selected cell (absolute coords of the complete dataset)
     pub selected_cell: Vector2i,
@@ -41,7 +46,7 @@ pub struct SheetCache {
     pub rows: Vec<SheetRow>,
     /// Group by enabled on field
     pub group_by_field: Option<FieldId>,
-    pub group_tabs: Vec<String>,
+    pub group_tabs: Vec<GroupTab>,
     pub group_selected: usize,
 }
 
@@ -134,50 +139,70 @@ impl App {
             None => (Vector2i::new(0, 0), 0, None, 0),
         };
 
+        let mut where_clause = WhereBuilder::new();
+
         let group_tabs = match group_by_field {
             Some(field_id) => {
                 let field = self.schema.field(field_id);
-                db::groups(&mut self.conn, &table.name, &field.name).unwrap()
+                let group_values = db::groups(&mut self.conn, &table.name, &field.name).unwrap();
+                let mut groups = Vec::new();
+
+                for group in group_values {
+                    let label = match &field.field_type {
+                        FieldType::StringField => rusqlite_value_to_string(&group),
+                        FieldType::SelectField { options } => {
+                            options
+                                .iter()
+                                .find(|o| o.key == rusqlite_value_to_string(&group) )
+                                .map(|o| o.label.clone())
+                                .flatten()
+                                .unwrap_or(rusqlite_value_to_string(&group))
+                        },
+                        FieldType::BelongsToField(related_table_id, related_field_id) => {
+                            let related_table = self.schema.table(*related_table_id);
+                            let related_field = self.schema.field(*related_field_id);
+                            db::related_title(&mut self.conn, &related_table.name, &related_field.name, &group, "title").unwrap()
+                        }
+                    };
+                    
+                    groups.push(GroupTab {
+                        label,
+                        value: group.clone(),
+                    })
+                }
+
+                groups
             },
             None => Vec::new(),
         };
 
-        let current_group = match (group_by_field) {
+        let current_group = match group_by_field {
             Some(id) => {
                 let field = self.schema.field(id);
-                Some(db::groups(&mut self.conn, &table.name, &field.name).unwrap()[group_selected].clone())
+                Some(group_tabs[group_selected].value.clone())
             },
             None => None,
         };
 
-        let where_clause = match group_by_field {
-            Some(fid) => {
-                let group_field = self.schema.field(fid);
-                format!("WHERE {} = ?", group_field.name)
-            },
-            None => "".to_string(),
-        };
+        if let Some(fid) = group_by_field {
+            let group_field = self.schema.field(fid);
+            where_clause = where_clause.and(&format!("{} = ?", group_field.name));
+        }
 
-        let count = match current_group {
-            Some(ref v) => {
-                db::count_rows(&mut self.conn, &table.name, &where_clause, [v.clone()])
-            },
-            None => db::count_rows(&mut self.conn, &table.name, "", [])
-        }.unwrap();
+        if let Some(ref v) = current_group {
+            where_clause = where_clause.param(v.clone())
+        }
 
-        let mut stmt = self.conn.prepare(&format!("SELECT rowid, * from {} {} ORDER BY __order LIMIT ? OFFSET ?", table.name, where_clause)).unwrap();
+        let count_query = QueryBuilder::with("SELECT COUNT(*) FROM").add(&table.name)
+            .add_where(&where_clause);
+        let count: usize = db::single_result(&mut self.conn, &count_query.as_query(), count_query.params_iter()).unwrap();
 
-        let mut rows = match current_group {
-            Some(group_field_value, ) => {
-                stmt.query((group_field_value, limit, offset)).unwrap()
-            },
-            None => {
-                stmt.query([limit, offset]).unwrap()
-            }
-        };
-        //
-        // let mut stmt = self.conn.prepare(&format!("SELECT rowid, * from {} ORDER BY __order LIMIT ? OFFSET ?", table.name)).unwrap();
-        // let mut rows = stmt.query([limit, offset]).unwrap();
+        let data_query = QueryBuilder::with("SELECT rowid, * FROM").add(&table.name)
+            .add_where(&where_clause)
+            .add("ORDER BY __order LIMIT ? OFFSET ?")
+            .params(&[rusqlite::types::Value::Integer(limit as i64), rusqlite::types::Value::Integer(offset as i64)]);
+        let mut stmt = self.conn.prepare(&data_query.as_query()).unwrap();
+        let mut rows = stmt.query(data_query.params_iter()).unwrap();
 
         let columns = self.schema.fields_for_table(table_id);
 
@@ -186,7 +211,7 @@ impl App {
             start_offset: offset,
             rows: Vec::new(),
             group_by_field,
-            total_count: count as usize,
+            total_count: count,
             columns: columns.iter().map(|s| SheetColumn { field_id: s.id, width: (s.name.len() + 2) as u16 }).collect(),
             table_id,
             group_tabs,

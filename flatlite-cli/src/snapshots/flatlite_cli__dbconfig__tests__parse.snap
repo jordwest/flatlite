@@ -11,6 +11,9 @@ Ok(
                     0,
                 ),
                 name: "todo",
+                label: Some(
+                    "Todos",
+                ),
                 source_file: "./todo.csv",
             },
             ConfigTable {
@@ -18,6 +21,9 @@ Ok(
                     1,
                 ),
                 name: "milestone",
+                label: Some(
+                    "Milestones",
+                ),
                 source_file: "./milestone.csv",
             },
             ConfigTable {
@@ -25,6 +31,9 @@ Ok(
                     2,
                 ),
                 name: "time_entries",
+                label: Some(
+                    "Time Entries",
+                ),
                 source_file: "./time_entries.csv",
             },
             ConfigTable {
@@ -32,6 +41,7 @@ Ok(
                     3,
                 ),
                 name: "bigdata",
+                label: None,
                 source_file: "./bigdata.csv",
             },
         ],

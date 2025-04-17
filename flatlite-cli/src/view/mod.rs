@@ -21,7 +21,7 @@ pub fn table_view(app: &App, area: Rect, buf: &mut Buffer) {
 
     // Tab bar
     let tb = TabBar {
-        tabs: sheet.group_tabs.iter().enumerate().map(|(id, s)| (id, s.to_string()) ).collect(),
+        tabs: sheet.group_tabs.iter().enumerate().map(|(id, s)| (id, s.label.to_string()) ).collect(),
         color_scheme: &app.color_scheme,
         selected_id: sheet.group_selected,
     };
