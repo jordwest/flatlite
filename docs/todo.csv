@@ -22,6 +22,7 @@ todo,feat,b3,Undo/redo
 todo,feat,idea,Display validation errors
 todo,feat,idea,"Different views configured in KDL (grouping, sorting, filtered views)"
 todo,feat,idea,Load multiple databases (with relations between them)
+todo,feat,idea,Calculated fields (like sum all time entries)
 done,imp,b1,Emoji support in labels and CSV 😊
 done,bug,b1,Pressing tab while editing writes to next field
 done,feat,b1,Allow rows to be deleted
