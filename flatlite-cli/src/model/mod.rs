@@ -161,7 +161,7 @@ impl App {
                         FieldType::BelongsToField(related_table_id, related_field_id) => {
                             let related_table = self.schema.table(*related_table_id);
                             let related_field = self.schema.field(*related_field_id);
-                            db::related_title(&mut self.conn, &related_table.name, &related_field.name, &group, "title").unwrap()
+                            db::related_title(&mut self.conn, &related_table.name, &related_field.name, &group, "title").unwrap().unwrap_or(rusqlite_value_to_string(&group))
                         }
                     };
                     
@@ -195,7 +195,7 @@ impl App {
 
         let count_query = QueryBuilder::with("SELECT COUNT(*) FROM").add(&table.name)
             .add_where(&where_clause);
-        let count: usize = db::single_result(&mut self.conn, &count_query.as_query(), count_query.params_iter()).unwrap();
+        let count: usize = db::single_result(&mut self.conn, &count_query.as_query(), count_query.params_iter()).unwrap().unwrap();
 
         let data_query = QueryBuilder::with("SELECT rowid, * FROM").add(&table.name)
             .add_where(&where_clause)

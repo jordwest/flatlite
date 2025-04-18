@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::path::{Path};
 use eyre::Context;
-use rusqlite::{params_from_iter, Connection, Params, ParamsFromIter};
+use rusqlite::{params_from_iter, Connection, OptionalExtension, Params, ParamsFromIter};
 use rusqlite::types::{FromSql, Value};
 use crate::schema::{Schema, TableId};
 
@@ -162,11 +162,11 @@ pub fn ingest_csv_table(conn: &mut Connection, schema: &mut Schema, table_id: Ta
     Ok(())
 }
 
-pub fn single_result<R: FromSql, P: Params>(conn: &mut Connection, query: &str, params: P) -> eyre::Result<R> {
+pub fn single_result<R: FromSql, P: Params>(conn: &mut Connection, query: &str, params: P) -> eyre::Result<Option<R>> {
     let mut count_stmt = conn.prepare(query)?;
     Ok(count_stmt.query_row(params, |r| {
         r.get(0)
-    })?)
+    }).optional()?)
 }
 
 pub fn rusqlite_value_to_string(v: &Value) -> String {
@@ -190,6 +190,6 @@ pub fn groups(conn: &mut Connection, table_name: &str, field_name: &str) -> eyre
     Ok(v)
 }
 
-pub fn related_title(conn: &mut Connection, table_name: &str, key_name: &str, key_value: &Value, title_field: &str) -> eyre::Result<String> {
+pub fn related_title(conn: &mut Connection, table_name: &str, key_name: &str, key_value: &Value, title_field: &str) -> eyre::Result<Option<String>> {
     single_result(conn, &format!("SELECT {} FROM {} WHERE {} = ?", title_field, table_name, key_name), [key_value])
 }

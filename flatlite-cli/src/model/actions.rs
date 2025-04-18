@@ -1,3 +1,4 @@
+use crate::db::QueryBuilder;
 use crate::model::{App, CellValue, Mode};
 use crate::model::text::TextInput;
 use crate::schema::FieldType;
@@ -167,13 +168,31 @@ impl App {
                     let cursor = sheet.view_cursor();
 
                     let new_order = match cursor.row() {
-                        x if x < sheet.rows.len() => x + 1,
-                        _ => sheet.rows.len(),
+                        x if x < sheet.rows.len() => {
+                            sheet.rows[cursor.row()].order + 1
+                        },
+                        _ => sheet.rows.len() as i64,
+                    };
+
+                    let mut insert_query = QueryBuilder::with(&format!("INSERT INTO {}", table.name));
+
+                    match sheet.group_by_field {
+                        Some(field_id) => {
+                            insert_query = insert_query
+                                .add(&format!("(__order, {}) VALUES (?, ?)", self.schema.field(field_id).name))
+                                .param(rusqlite::types::Value::Integer(new_order))
+                                .param(sheet.group_tabs[sheet.group_selected].value.clone());
+                        },
+                        None => {
+                            insert_query = insert_query
+                                .add("(__order) VALUES (?)")
+                                .param(rusqlite::types::Value::Integer(new_order));
+                        }
                     };
 
                     self.conn.execute(&format!("UPDATE {} SET __order = __order + 1 WHERE __order >= ?", table.name), [new_order]).unwrap();
-                    self.conn.execute(&format!("INSERT INTO {} (__order) VALUES (?)", table.name), [new_order]).unwrap();
-                    new_order
+                    self.conn.execute(&insert_query.as_query(), insert_query.params_iter()).unwrap();
+                    sheet.selected_cell.y + 1
                 };
 
                 let sheet = self.active_sheet_mut().unwrap();
