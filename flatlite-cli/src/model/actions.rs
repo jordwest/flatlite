@@ -1,3 +1,5 @@
+use rusqlite::types::Value;
+use crate::db::OrderDirection::Ascending;
 use crate::db::QueryBuilder;
 use crate::model::{App, CellValue, Mode};
 use crate::model::text::TextInput;
@@ -22,6 +24,7 @@ pub enum Action {
     SetMode(Mode),
     EditCell { clear: bool },
     SaveCell { value: String },
+    MoveRowDown,
 }
 
 impl App {
@@ -38,6 +41,24 @@ impl App {
                     Mode::EditingCell(_) => {},
                     Mode::EditBelongsTo { .. } => self.refresh_related_autocomplete(),
                 }
+            }
+            Action::MoveRowDown => {
+                // TODO: This will need to be disabled when custom sorting is enabled as it wouldn't work as is.
+                let mut where_clause = self.table_where_clause(self.current_sheet);
+                let current_row = self.selected_row();
+
+                where_clause = where_clause.and("__order > ?").param(Value::Integer(current_row.order));
+
+                let table_name = self.schema.table(self.current_sheet).name.clone();
+
+                let query = QueryBuilder::with(&format!("SELECT __order FROM {}", &table_name))
+                    .add_where(&where_clause)
+                    .add_order(&self.table_order_clause());
+
+                let mut stmt = self.conn.prepare(&query.as_query()).unwrap();
+                let other_order: i64 = stmt.query_row(query.params_iter(), |row| row.get(0)).unwrap();
+
+                self.debug_text = format!("Reorder {} and {}", current_row.order, other_order);
             }
             Action::SetGroupBy => {
                 let sheet = self.active_sheet_mut().unwrap();

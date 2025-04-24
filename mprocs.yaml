@@ -7,6 +7,10 @@ procs:
     autostart: false
     cwd: "flatlite-cli"
     shell: "cargo test"
+  install:
+    autostart: false
+    cwd: "flatlite-cli"
+    shell: "cargo install --path ."
   snapshot-review:
     autostart: false
     cwd: "flatlite-cli"

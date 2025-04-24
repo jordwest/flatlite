@@ -1,3 +1,4 @@
+use kdl::NodeKey::Key;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use crate::model::{App, Mode};
 use crate::model::actions::Action;
@@ -60,6 +61,7 @@ impl App {
                             KeyCode::Right => self.push_action(Action::MoveCursor(Vector2i::new(1, 0))),
                             KeyCode::Left => self.push_action(Action::MoveCursor(Vector2i::new(-1, 0))),
                             KeyCode::Up => self.push_action(Action::MoveCursor(Vector2i::new(0, -1))),
+                            KeyCode::Down if k.modifiers.intersects(KeyModifiers::SHIFT) => self.push_action(Action::MoveRowDown),
                             KeyCode::Down => self.push_action(Action::MoveCursor(Vector2i::new(0, 1))),
                             KeyCode::PageUp => self.push_action(Action::Page(-1)),
                             KeyCode::PageDown => self.push_action(Action::Page(1)),

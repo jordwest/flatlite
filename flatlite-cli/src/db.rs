@@ -1,9 +1,67 @@
+use std::fmt::Display;
 use std::fs::File;
 use std::path::{Path};
 use eyre::Context;
 use rusqlite::{params_from_iter, Connection, OptionalExtension, Params, ParamsFromIter};
 use rusqlite::types::{FromSql, Value};
 use crate::schema::{Schema, TableId};
+
+#[derive(Clone, Copy)]
+pub enum OrderDirection {
+    Ascending,
+    Descending,
+}
+
+impl Display for OrderDirection {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OrderDirection::Ascending => write!(f, "ASC"),
+            OrderDirection::Descending => write!(f, "DESC"),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct OrderByBuilder {
+    clauses: Vec<(String, OrderDirection)>,
+}
+
+impl OrderByBuilder {
+    pub fn new() -> Self {
+        OrderByBuilder {
+            clauses: Vec::new(),
+        }
+    }
+    
+    pub fn asc(mut self, field: &str) -> Self {
+        self.clauses.push((field.to_string(), OrderDirection::Ascending));
+        self
+    }
+
+    pub fn desc(mut self, field: &str) -> Self {
+        self.clauses.push((field.to_string(), OrderDirection::Descending));
+        self
+    }
+    
+    pub fn invert(mut self) -> Self {
+        for entry in self.clauses.iter_mut() {
+            entry.1 = match entry.1 {
+                OrderDirection::Ascending => OrderDirection::Descending,
+                OrderDirection::Descending => OrderDirection::Ascending,
+            };
+        }
+        self
+    }
+    
+    pub fn as_query(&self) -> String {
+        let clauses = self.clauses.iter()
+            .map(|(field, dir)| format!("{} {}", field, dir))
+            .collect::<Vec<_>>()
+            .join(", ");
+        
+        format!("ORDER BY {}", clauses)
+    }
+}
 
 #[derive(Clone)]
 pub struct WhereBuilder {
@@ -76,6 +134,11 @@ impl QueryBuilder {
         self
     }
 
+    pub fn add_order(mut self, order_builder: &OrderByBuilder) -> Self {
+        self.clauses.push(order_builder.as_query());
+        self
+    }
+    
     pub fn add_where(mut self, where_builder: &WhereBuilder) -> Self {
         self.clauses.push(where_builder.as_query());
         self.params.extend_from_slice(where_builder.params.as_slice());

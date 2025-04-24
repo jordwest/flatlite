@@ -9,6 +9,7 @@ todo,feat,b3,Sort columns
 done,bug,b2,Crashes when adding a new row in grouped mode
 done,imp,b2,Use related record title for group headings (or option label if select)
 todo,feat,b2,Basic search (sqlite LIKE is fine)
+doing,feat,b2,Move row up/down (shift-J/K)
 todo,imp,b3,allow cursor movement in text editing
 todo,imp,b3,Show selected record in belongs_to autocomplete
 todo,imp,b3,Autocomplete popup for select fields
