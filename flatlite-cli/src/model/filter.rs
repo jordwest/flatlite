@@ -58,8 +58,11 @@ impl App {
         group_tabs
     }
 
-    pub fn table_order_clause(&self) -> OrderByBuilder {
-        OrderByBuilder::new().asc("__order")
+    pub fn table_order_clause(&self, reverse: bool) -> OrderByBuilder {
+        match reverse {
+            false => OrderByBuilder::new().asc("__order"),
+            true => OrderByBuilder::new().desc("__order"),
+        }
     }
 
     /// Build a WHERE clause for the current table view and any grouping, filters, etc.

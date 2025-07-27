@@ -24,7 +24,7 @@ pub enum Action {
     SetMode(Mode),
     EditCell { clear: bool },
     SaveCell { value: String },
-    MoveRowDown,
+    MoveRow(i32),
 }
 
 impl App {
@@ -42,23 +42,37 @@ impl App {
                     Mode::EditBelongsTo { .. } => self.refresh_related_autocomplete(),
                 }
             }
-            Action::MoveRowDown => {
+            Action::MoveRow(by) => {
                 // TODO: This will need to be disabled when custom sorting is enabled as it wouldn't work as is.
-                let mut where_clause = self.table_where_clause(self.current_sheet);
-                let current_row = self.selected_row();
+                {
+                    let mut where_clause = self.table_where_clause(self.current_sheet);
+                    let current_row = self.selected_row();
 
-                where_clause = where_clause.and("__order > ?").param(Value::Integer(current_row.order));
+                    if (by > 0) {
+                        where_clause = where_clause.and("__order > ?").param(Value::Integer(current_row.order));
+                    } else {
+                        where_clause = where_clause.and("__order < ?").param(Value::Integer(current_row.order));
+                    }
 
-                let table_name = self.schema.table(self.current_sheet).name.clone();
+                    let table_name = self.schema.table(self.current_sheet).name.clone();
 
-                let query = QueryBuilder::with(&format!("SELECT __order FROM {}", &table_name))
-                    .add_where(&where_clause)
-                    .add_order(&self.table_order_clause());
+                    let query = QueryBuilder::with(&format!("SELECT rowid, __order FROM {}", &table_name))
+                        .add_where(&where_clause)
+                        .add_order(&self.table_order_clause(by < 0));
 
-                let mut stmt = self.conn.prepare(&query.as_query()).unwrap();
-                let other_order: i64 = stmt.query_row(query.params_iter(), |row| row.get(0)).unwrap();
+                    let mut stmt = self.conn.prepare(&query.as_query()).unwrap();
+                    let (other_id, other_order): (i64, i64) = stmt.query_row(query.params_iter(), |row| Ok((row.get(0)?, row.get(1)?))).unwrap();
 
-                self.debug_text = format!("Reorder {} and {}", current_row.order, other_order);
+                    let mut update_query = self.conn.prepare(&format!("UPDATE {} SET __order = ? WHERE rowid = ?", &table_name)).unwrap();
+                    update_query.execute([other_order, current_row.rowid]).unwrap();
+                    update_query.execute([current_row.order, other_id]).unwrap();
+
+                    self.debug_text = format!("Reordered {} and {}", current_row.order, other_order);
+                }
+                self.populate_sheet(self.current_sheet);
+                // Row moved so move the cursor too
+                self.push_action(Action::MoveCursor(Vector2i::new(0, by)));
+                self.save_entity(self.current_sheet).unwrap();
             }
             Action::SetGroupBy => {
                 let sheet = self.active_sheet_mut().unwrap();

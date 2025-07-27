@@ -137,7 +137,7 @@ impl App {
         };
 
         let where_clause = self.table_where_clause(table_id);
-        let order_by = self.table_order_clause();
+        let order_by = self.table_order_clause(false);
         let group_tabs = self.table_group_tabs(table_id);
 
         let table = self.schema.table(table_id);
