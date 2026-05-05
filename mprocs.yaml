@@ -1,8 +1,8 @@
 procs:
   terminal:
     shell: "fish"
-  git:
-    shell: "gitui"
+  jj:
+    shell: "jjui"
   test:
     autostart: false
     cwd: "flatlite-cli"
