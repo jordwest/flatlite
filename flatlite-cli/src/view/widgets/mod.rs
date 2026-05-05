@@ -1,4 +1,5 @@
 pub mod autocomplete;
+pub mod swatch;
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;

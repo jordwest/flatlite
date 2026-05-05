@@ -21,8 +21,8 @@ pub struct ColorScheme {
     pub autocomplete_item_selected: Style,
 }
 
-impl Default for ColorScheme {
-    fn default() -> Self {
+impl ColorScheme {
+    fn default_rgb() -> Self {
         ColorScheme {
             active_tab: Style::from((Black, White)).add_modifier(Modifier::BOLD),
             inactive_tab: Style::from((Black, Rgb(150, 150, 150))),
@@ -40,6 +40,29 @@ impl Default for ColorScheme {
             autocomplete_search_placeholder: Style::from((Rgb(120, 120, 120), Rgb(80, 80, 80))),
             autocomplete_item: Style::from((White, Black)),
             autocomplete_item_selected: Style::from((Black, Rgb(200, 200, 255))),
+        }
+    }
+}
+
+impl Default for ColorScheme {
+    fn default() -> Self {
+        ColorScheme {
+            active_tab: Style::from((Color::Black, Color::White)).add_modifier(Modifier::BOLD),
+            inactive_tab: Style::default(),
+            status_bar: Style::from((Black, White)),
+            debug_panel: Style::from((Reset, Color::DarkGray)),
+            sheet_heading_active: Style::from((Black, Color::LightBlue)).add_modifier(Modifier::BOLD).add_modifier(Modifier::UNDERLINED),
+            sheet_heading_inactive: Style::from((Black, White)).add_modifier(Modifier::UNDERLINED),
+            cell: Style::default(),
+            cell_null: Style::from(Color::Gray),
+            cell_aligned: Style::default(),
+            cell_selected: Style::from((Black, Color::White)),
+            cell_editing: Style::from((Black, White)),
+            cell_editing_cursor: Style::from((White, Black)),
+            autocomplete_search: Style::from((White, Black)),
+            autocomplete_search_placeholder: Style::from((White, Black)),
+            autocomplete_item: Style::from((White, Black)),
+            autocomplete_item_selected: Style::from((Black, White)),
         }
     }
 }

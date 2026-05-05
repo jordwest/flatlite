@@ -1,8 +1,0 @@
-WARN [lib::vt100::screen] CSI not implemented: ESC [ ?2026 $ p
-WARN [lib::vt100::screen] CSI not implemented: ESC [ ?2027 $ p
-WARN [lib::vt100::screen] CSI not implemented: ESC [ >4  m
-WARN [lib::vt100::screen] CSI not implemented: ESC [ =0;1  u
-WARN [lib::vt100::screen] CSI not implemented: ESC [ ?1004  h
-WARN [lib::vt100::screen] CSI not implemented: ESC [ >4;2  m
-WARN [lib::vt100::screen] CSI not implemented: ESC [ =1;1  u
-WARN [lib::vt100::screen] CSI not implemented: ESC [ ?  u
