@@ -2,10 +2,11 @@ status,type,milestone_id,title
 todo,feat,b3,"Add concept of a ""perspective"" in which filters and grouping will be configured"
 doing,refactor,b2,refactor all SQL queries to db module
 done,feat,b2,Group by in sheet view
-todo,feat,b3,"Don't hardcode ""title"" field for record display name"
+doing,imp,new,New todo
+todo,feat,new,"Don't hardcode ""title"" field for record display name"
 todo,feat,b3,Filter columns
 todo,feat,b3,Sort columns
-todo,feat,b3,Boolean types
+todo,feat,new,Boolean types
 done,bug,b3,Crashes when adding a new row in grouped mode
 done,imp,b2,Use related record title for group headings (or option label if select)
 done,feat,b3,Move row up/down (shift-J/K)

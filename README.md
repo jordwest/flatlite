@@ -1,4 +1,4 @@
-#flatlite
+# flatlite
 
 Interactive relational database with all data stored in CSV files.
 
